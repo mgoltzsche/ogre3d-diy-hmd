@@ -29,7 +29,6 @@
 									<listOptionValue builtIn="false" value="&quot;${OGRE_LOC}/OgreMain/include&quot;"/>
 									<listOptionValue builtIn="false" value="/usr/local/include/OGRE"/>
 									<listOptionValue builtIn="false" value="&quot;${OGRE_LOC}/Samples/Common/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${OGRE_LOC}/include&quot;"/>
 									<listOptionValue builtIn="false" value="/usr/local/include/OIS"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.2117696523" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -44,7 +43,7 @@
 								<option id="gnu.cpp.link.option.paths.1292458665" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="/usr/local/lib"/>
 								</option>
-								<option id="gnu.cpp.link.option.libs.446826431" superClass="gnu.cpp.link.option.libs" valueType="libs">
+								<option id="gnu.cpp.link.option.libs.446826431" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="OgreMain"/>
 									<listOptionValue builtIn="false" value="OIS"/>
 								</option>
