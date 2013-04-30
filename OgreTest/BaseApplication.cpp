@@ -18,10 +18,20 @@
 
 //-------------------------------------------------------------------------------------
 BaseApplication::BaseApplication(void) :
-		mRoot(0), mCamera(0), mSceneMgr(0), mWindow(0), mResourcesCfg(
-				Ogre::StringUtil::BLANK), mPluginsCfg(Ogre::StringUtil::BLANK), mTrayMgr(
-				0), mCameraMan(0), mDetailsPanel(0), mCursorWasVisible(false), mShutDown(
-				false), mInputManager(0), mMouse(0), mKeyboard(0) {
+		mRoot(0),
+		mCamera(0),
+		mSceneMgr(0),
+		mWindow(0),
+		mResourcesCfg(Ogre::StringUtil::BLANK),
+		mPluginsCfg(Ogre::StringUtil::BLANK),
+		mTrayMgr(0),
+		mCameraMan(0),
+		mDetailsPanel(0),
+		mCursorWasVisible(false),
+		mShutDown(false),
+		mInputManager(0),
+		mMouse(0),
+		mKeyboard(0) {
 }
 
 //-------------------------------------------------------------------------------------
@@ -63,9 +73,9 @@ void BaseApplication::createCamera(void) {
 	mCamera = mSceneMgr->createCamera("PlayerCam");
 
 	// Position it at 500 in Z direction
-	mCamera->setPosition(Ogre::Vector3(0, 0, 80));
+	mCamera->setPosition(Ogre::Vector3(0, 10, 200));
 	// Look back along -Z
-	mCamera->lookAt(Ogre::Vector3(0, 0, -300));
+	mCamera->lookAt(Ogre::Vector3(0, 0, 0));
 	mCamera->setNearClipDistance(5);
 
 	mCameraMan = new OgreBites::SdkCameraMan(mCamera); // create a default camera controller

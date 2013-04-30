@@ -12,15 +12,46 @@ HMDApplication::~HMDApplication(void) {
 //-------------------------------------------------------------------------------------
 void HMDApplication::createScene(void) {
 	// configure ambient light
-	mSceneMgr->setAmbientLight(ColourValue(0.3, 0.3, 0.3));
-	mSceneMgr->createLight()->setPosition(20, 80, 50);
+	mSceneMgr->setAmbientLight(ColourValue(0.05f, 0.05f, 0.05f));
+	mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
+	mSceneMgr->createLight("PointLight")->setPosition(120, 200, 200);
+	Ogre::Light* spotLight = mSceneMgr->createLight("SpotLight");
+	spotLight->setType(Ogre::Light::LT_SPOTLIGHT);
+	spotLight->setDiffuseColour(1.0, 0, 0);
+	spotLight->setSpecularColour(1.0, 0, 0);
+	spotLight->setDirection(-1, -1, 0);
+	spotLight->setPosition(Ogre::Vector3(300, 300, 0));
+	spotLight->setSpotlightRange(Ogre::Degree(10), Ogre::Degree(30));
 
-	//mSceneMgr->setSkyBox(true, "Examples/MorningSkyBox");
+	//mSceneMgr->setSkyBox(true, "Examples/MorningSkyBox"); // missing file
 
-	// create an ogre head entity and attach it to a node
-	Entity* head = mSceneMgr->createEntity("Head", "ogrehead.mesh");
-	SceneNode* headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-	headNode->attachObject(head);
+	// create two ogre head entities and attach each to its SceneNode to be rendered
+	Entity* head1 = mSceneMgr->createEntity("Head1", "ogrehead.mesh");
+	SceneNode* head1Node = mSceneMgr->getRootSceneNode()->createChildSceneNode("HeadNode1", Vector3(50, 50, 0));
+	head1Node->attachObject(head1);
+
+	Entity* head2 = mSceneMgr->createEntity("Head2", "ogrehead.mesh");
+	SceneNode* head2Node = mSceneMgr->getRootSceneNode()->createChildSceneNode("HeadNode2", Vector3(-50, 20, 0));
+	head2Node->attachObject(head2);
+	head2Node->scale(0.5f, 0.5f, 0.5f);
+	head2Node->yaw(Ogre::Degree(-45));
+
+	// create Ninja
+	Ogre::Entity* ninja = mSceneMgr->createEntity("Ninja", "ninja.mesh");
+	SceneNode* ninjaNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("NinjaNode");
+	ninjaNode->attachObject(ninja);
+	ninjaNode->scale(0.3f, 0.3f, 0.3f);
+	ninjaNode->yaw(Ogre::Degree(130));
+
+	// create ground
+	Ogre::Plane plane(Ogre::Vector3::UNIT_Y, 0);
+	Ogre::MeshManager::getSingleton().createPlane("ground", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+	    plane, 1500, 1500, 20, 20, true, 1, 5, 5, Ogre::Vector3::UNIT_Z);
+
+	Ogre::Entity* ground = mSceneMgr->createEntity("Ground", "ground");
+	//ground->setMaterialName("Rockwall.tga");
+	ground->setCastShadows(false);
+	mSceneMgr->getRootSceneNode()->createChildSceneNode("GroundNode")->attachObject(ground);
 }
 
 
@@ -43,9 +74,11 @@ int main(int argc, char *argv[])
 	// Create application object
 	HMDApplication app;
 
+	// run application
 	try {
 		app.go();
 	} catch (Ogre::Exception& e) {
+		// log exceptions
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 		MessageBox( NULL, e.getFullDescription().c_str(), "An exception has occured!", MB_OK | MB_ICONERROR | MB_TASKMODAL);
 #else
