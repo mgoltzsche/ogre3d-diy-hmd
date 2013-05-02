@@ -69,14 +69,16 @@ void BaseApplication::chooseSceneManager(void) {
 }
 //-------------------------------------------------------------------------------------
 void BaseApplication::createCamera(void) {
-	// Create the camera
+	const int farClipDistance = mRoot->getRenderSystem()->getCapabilities()->hasCapability(Ogre::RSC_INFINITE_FAR_PLANE)
+			? 0 : 50000;
+
 	mCamera = mSceneMgr->createCamera("PlayerCam");
 
-	// Position it at 500 in Z direction
 	mCamera->setPosition(Ogre::Vector3(0, 10, 200));
-	// Look back along -Z
 	mCamera->lookAt(Ogre::Vector3(0, 0, 0));
-	mCamera->setNearClipDistance(5);
+	mCamera->setNearClipDistance(0.1);
+	mCamera->setFarClipDistance(farClipDistance);
+	mCamera->setFarClipDistance(50000);
 
 	mCameraMan = new OgreBites::SdkCameraMan(mCamera); // create a default camera controller
 }

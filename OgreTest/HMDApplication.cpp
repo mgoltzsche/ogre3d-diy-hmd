@@ -11,17 +11,8 @@ HMDApplication::~HMDApplication(void) {
 
 //-------------------------------------------------------------------------------------
 void HMDApplication::createScene(void) {
-	// configure ambient light
-	mSceneMgr->setAmbientLight(ColourValue(0.05f, 0.05f, 0.05f));
-	mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
-	mSceneMgr->createLight("PointLight")->setPosition(120, 200, 200);
-	Ogre::Light* spotLight = mSceneMgr->createLight("SpotLight");
-	spotLight->setType(Ogre::Light::LT_SPOTLIGHT);
-	spotLight->setDiffuseColour(1.0, 0, 0);
-	spotLight->setSpecularColour(1.0, 0, 0);
-	spotLight->setDirection(-1, -1, 0);
-	spotLight->setPosition(Ogre::Vector3(300, 300, 0));
-	spotLight->setSpotlightRange(Ogre::Degree(10), Ogre::Degree(30));
+	setupLight();
+	setupTerrain();
 
 	//mSceneMgr->setSkyBox(true, "Examples/MorningSkyBox"); // missing file
 
@@ -52,6 +43,51 @@ void HMDApplication::createScene(void) {
 	//ground->setMaterialName("Rockwall.tga");
 	ground->setCastShadows(false);
 	mSceneMgr->getRootSceneNode()->createChildSceneNode("GroundNode")->attachObject(ground);
+}
+
+void HMDApplication::setupLight(void) {
+	// configure ambient light
+	mSceneMgr->setAmbientLight(ColourValue(0.05f, 0.05f, 0.05f));
+	mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
+	mSceneMgr->createLight("PointLight")->setPosition(1020, 2000, 2000);
+	Ogre::Light* spotLight = mSceneMgr->createLight("SpotLight");
+	spotLight->setType(Ogre::Light::LT_SPOTLIGHT);
+	spotLight->setDiffuseColour(1.0, 0, 0);
+	spotLight->setSpecularColour(1.0, 0, 0);
+	spotLight->setDirection(-1, -1, 0);
+	spotLight->setPosition(Ogre::Vector3(300, 300, 0));
+	spotLight->setSpotlightRange(Ogre::Degree(10), Ogre::Degree(30));
+
+	// configure directional light
+	Vector3 direction(0.55, -0.3, 0.75);
+	direction.normalise();
+
+	mDirectionalLight = mSceneMgr->createLight("DirectionalLight");
+	mDirectionalLight->setType(Ogre::Light::LT_DIRECTIONAL);
+	mDirectionalLight->setDirection(direction);
+	mDirectionalLight->setDiffuseColour(Ogre::ColourValue::White);
+	mDirectionalLight->setSpecularColour(Ogre::ColourValue(0.4, 0.4, 0.4));
+}
+
+void HMDApplication::setupTerrain(void) {
+	//mTerrainGlobals = OGRE_NEW Ogre::TerrainGlobalOptions();
+	/*mTerrainGroup = OGRE_NEW Ogre::TerrainGroup(mSceneMgr, Ogre::Terrain::ALIGN_X_Z, 513, 12000.0f);
+	mTerrainGroup->setFilenameConvention(Ogre::String("BasicTutorial3Terrain"), Ogre::String("dat"));
+	mTerrainGroup->setOrigin(Ogre::Vector3::ZERO);*/
+
+	//configureTerrainDefaults();
+}
+
+void HMDApplication::configureTerrainDefaults(void) {
+
+}
+
+void HMDApplication::defineTerrain(long x, long y) {
+
+}
+
+void HMDApplication::initBlendMaps(Ogre::Terrain* terrain) {
+
 }
 
 
