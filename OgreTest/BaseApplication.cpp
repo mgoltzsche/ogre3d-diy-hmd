@@ -74,13 +74,15 @@ void BaseApplication::createCamera(void) {
 
 	mCamera = mSceneMgr->createCamera("PlayerCam");
 
-	mCamera->setPosition(Ogre::Vector3(0, 10, 200));
+	mCamera->setPosition(Ogre::Vector3(0, 200, 200));
 	mCamera->lookAt(Ogre::Vector3(0, 0, 0));
 	mCamera->setNearClipDistance(0.1);
 	mCamera->setFarClipDistance(farClipDistance);
-	mCamera->setFarClipDistance(50000);
 
-	mCameraMan = new OgreBites::SdkCameraMan(mCamera); // create a default camera controller
+	Ogre::MaterialManager::getSingleton().setDefaultTextureFiltering(Ogre::TFO_ANISOTROPIC);
+	Ogre::MaterialManager::getSingleton().setDefaultAnisotropy(7);
+
+	mCameraMan = new OgreBites::SdkCameraMan(mCamera); // create default camera controller
 }
 //-------------------------------------------------------------------------------------
 void BaseApplication::createFrameListener(void) {
