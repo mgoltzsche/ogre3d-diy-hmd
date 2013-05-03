@@ -48,36 +48,37 @@ void HMDApplication::createScene(void) {
 
 void HMDApplication::setupLight(void) {
 	// configure ambient light
-	mSceneMgr->setAmbientLight(ColourValue(0.05f, 0.05f, 0.05f));
-	mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
+	mSceneMgr->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
 
 	mSceneMgr->createLight("PointLight")->setPosition(1020, 2000, 2000);
 
-	Ogre::Light* spotLight = mSceneMgr->createLight("SpotLight");
-	spotLight->setType(Ogre::Light::LT_SPOTLIGHT);
+	Light* spotLight = mSceneMgr->createLight("SpotLight");
+	spotLight->setType(Light::LT_SPOTLIGHT);
 	spotLight->setDiffuseColour(1.0, 0, 0);
 	spotLight->setSpecularColour(1.0, 0, 0);
 	spotLight->setDirection(-1, -1, 0);
-	spotLight->setPosition(Ogre::Vector3(300, 300, 0));
-	spotLight->setSpotlightRange(Ogre::Degree(10), Ogre::Degree(30));
+	spotLight->setPosition(Vector3(300, 300, 0));
+	spotLight->setSpotlightRange(Degree(10), Degree(30));
 
 	// configure directional light
 	Vector3 direction(0.55, -0.3, 0.75);
 	direction.normalise();
 
 	mDirectionalLight = mSceneMgr->createLight("DirectionalLight");
-	mDirectionalLight->setType(Ogre::Light::LT_DIRECTIONAL);
+	mDirectionalLight->setType(Light::LT_DIRECTIONAL);
 	mDirectionalLight->setDirection(direction);
-	mDirectionalLight->setDiffuseColour(Ogre::ColourValue::White);
-	mDirectionalLight->setSpecularColour(Ogre::ColourValue(0.4, 0.4, 0.4));
+	mDirectionalLight->setDiffuseColour(ColourValue::White);
+	mDirectionalLight->setSpecularColour(ColourValue(0.4, 0.4, 0.4));
+
+	mSceneMgr->setAmbientLight(ColourValue(0.2, 0.2, 0.2));
 }
 
 void HMDApplication::setupTerrain(void) {
 	mTerrainGlobals = OGRE_NEW Ogre::TerrainGlobalOptions();
 
-	mTerrainGroup = OGRE_NEW Ogre::TerrainGroup(mSceneMgr, Ogre::Terrain::ALIGN_X_Z, 513, 12000.0f);
+	mTerrainGroup = OGRE_NEW TerrainGroup(mSceneMgr, Ogre::Terrain::ALIGN_X_Z, 513, 12000.0f);
 	mTerrainGroup->setFilenameConvention(Ogre::String("BasicTutorial3Terrain"), Ogre::String("dat"));
-	mTerrainGroup->setOrigin(Ogre::Vector3::ZERO);
+	mTerrainGroup->setOrigin(Vector3::ZERO);
 
 	configureTerrainDefaults();
 
@@ -89,10 +90,10 @@ void HMDApplication::setupTerrain(void) {
 	mTerrainGroup->loadAllTerrains(true);
 
 	if (mTerrainsImported) {
-		Ogre::TerrainGroup::TerrainIterator ti =
+		TerrainGroup::TerrainIterator ti =
 				mTerrainGroup->getTerrainIterator();
 		while (ti.hasMoreElements()) {
-			Ogre::Terrain* t = ti.getNext()->instance;
+			Terrain* t = ti.getNext()->instance;
 			initBlendMaps(t);
 		}
 	}
@@ -112,7 +113,7 @@ void HMDApplication::configureTerrainDefaults(void) {
 	mTerrainGlobals->setCompositeMapDiffuse(mDirectionalLight->getDiffuseColour());
 
 	// Configure default import settings for if we use imported image
-	Ogre::Terrain::ImportData& defaultimp = mTerrainGroup->getDefaultImportSettings();
+	Terrain::ImportData& defaultimp = mTerrainGroup->getDefaultImportSettings();
 	defaultimp.terrainSize = 513;
 	defaultimp.worldSize = 12000.0f;
 	defaultimp.inputScale = 600;
@@ -132,7 +133,7 @@ void HMDApplication::configureTerrainDefaults(void) {
 }
 
 void getTerrainImage(bool flipX, bool flipY, Ogre::Image& img) {
-    img.load("terrain.png", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    img.load("terrain.png", ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 
     if (flipX)
         img.flipAroundY();
@@ -142,11 +143,11 @@ void getTerrainImage(bool flipX, bool flipY, Ogre::Image& img) {
 
 void HMDApplication::defineTerrain(long x, long y) {
 	Ogre::String filename = mTerrainGroup->generateFilename(x, y);
-	if (Ogre::ResourceGroupManager::getSingleton().resourceExists(
+	if (ResourceGroupManager::getSingleton().resourceExists(
 			mTerrainGroup->getResourceGroup(), filename)) {
 		mTerrainGroup->defineTerrain(x, y);
 	} else {
-		Ogre::Image img;
+		Image img;
 		getTerrainImage(x % 2 != 0, y % 2 != 0, img);
 		mTerrainGroup->defineTerrain(x, y, &img);
 		mTerrainsImported = true;
@@ -154,8 +155,8 @@ void HMDApplication::defineTerrain(long x, long y) {
 }
 
 void HMDApplication::initBlendMaps(Ogre::Terrain* terrain) {
-	Ogre::TerrainLayerBlendMap* blendMap0 = terrain->getLayerBlendMap(1);
-	Ogre::TerrainLayerBlendMap* blendMap1 = terrain->getLayerBlendMap(2);
+	TerrainLayerBlendMap* blendMap0 = terrain->getLayerBlendMap(1);
+	TerrainLayerBlendMap* blendMap1 = terrain->getLayerBlendMap(2);
 	Ogre::Real minHeight0 = 70;
 	Ogre::Real fadeDist0 = 40;
 	Ogre::Real minHeight1 = 70;
