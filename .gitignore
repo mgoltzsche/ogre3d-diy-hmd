@@ -1,5 +1,7 @@
 */Debug
 */build
+.project
 .cproject
+.settings
 Ogre.log
 ogre.cfg
