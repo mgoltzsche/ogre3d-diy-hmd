@@ -5,3 +5,6 @@
 .settings
 Ogre.log
 ogre.cfg
+
+# Mac OS X
+.DS_Store
