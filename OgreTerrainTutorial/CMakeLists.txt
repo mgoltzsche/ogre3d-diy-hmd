@@ -108,13 +108,14 @@ if (NOT OGRE_BUILD_PLATFORM_IPHONE)
 endif()
  
 set(HDRS
-	./BaseApplication.h
-	./TerrainApplication.h
+	./src/AppDelegate.h
+	./src/BaseApplication.h
+	./src/TerrainApplication.h
 )
  
 set(SRCS
-	./BaseApplication.cpp
-	./TerrainApplication.cpp
+	./src/BaseApplication.cpp
+	./src/TerrainApplication.cpp
 )
  
 include_directories( ${OIS_INCLUDE_DIRS}
