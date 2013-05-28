@@ -5,3 +5,8 @@
 .settings
 Ogre.log
 ogre.cfg
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+OgreApp_d
