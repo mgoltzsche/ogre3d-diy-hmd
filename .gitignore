@@ -11,3 +11,6 @@ Makefile
 cmake_install.cmake
 OgreApp_d
 *.dat
+
+# Mac OS X
+.DS_Store
