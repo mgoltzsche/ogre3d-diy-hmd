@@ -111,11 +111,13 @@ set(HDRS
 	./src/AppDelegate.h
 	./src/BaseApplication.h
 	./src/TerrainApplication.h
+	./src/GyroInput.h
 )
  
 set(SRCS
 	./src/BaseApplication.cpp
 	./src/TerrainApplication.cpp
+	./src/GyroInput.cpp
 )
  
 include_directories( ${OIS_INCLUDE_DIRS}

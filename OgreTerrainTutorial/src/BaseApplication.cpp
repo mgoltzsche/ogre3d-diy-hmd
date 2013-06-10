@@ -15,9 +15,7 @@
  -----------------------------------------------------------------------------
  */
 #include "BaseApplication.h"
-#include <boost/asio.hpp>
-
-using namespace::boost::asio;
+#include "GyroInput.h"
 
 //-------------------------------------------------------------------------------------
 BaseApplication::BaseApplication(void) :
@@ -195,23 +193,8 @@ void BaseApplication::go(void) {
 	mPluginsCfg = workingDir + mPluginsCfg;
 #endif
 
-	serial_port_base::baud_rate BAUD(38400);
-	serial_port_base::parity PARITY(serial_port_base::parity::none);
-	serial_port_base::stop_bits STOP(serial_port_base::stop_bits::one);
-
-	io_service io;
-	serial_port serial(io, "COM29");
-
-	serial.set_option(BAUD);
-	serial.set_option(PARITY);
-	serial.set_option(STOP);
-
-	char r;
-
-	boost::asio::read(serial, buffer(&r,1), transfer_at_least(0));
-
-	printf("SERIAL INTPUT: %x", r);
-	//write(serial, buffer(to_write,1));
+	GyroInput gyro("/dev/ttyACM0", 38400);
+	gyro.readAsync();
 
 	if (!setup())
 		return;
