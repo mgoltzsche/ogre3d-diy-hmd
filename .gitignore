@@ -3,6 +3,7 @@
 .project
 .cproject
 .settings
+resources.cfg~
 Ogre.log
 ogre.cfg
 CMakeCache.txt
