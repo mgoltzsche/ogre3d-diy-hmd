@@ -50,12 +50,6 @@ void DualViewApplication::dualViewport(Ogre::SceneManager *primarySceneMgr,
 	cam->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
 }
 
-static void swap(Ogre::SceneManager *&first, Ogre::SceneManager *&second) {
-	Ogre::SceneManager *tmp = first;
-	first = second;
-	second = tmp;
-}
-
 void DualViewApplication::createScene(void) {
 	// Set up the space SceneManager
 	mPrimarySceneMgr->setSkyBox(true, "Examples/SpaceSkyBox");

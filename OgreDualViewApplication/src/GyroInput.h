@@ -16,11 +16,12 @@ class GyroInput {
 
 private:
 	boost::asio::serial_port* serial;
-	GyroData* data;
+
 public:
 	GyroInput(const char*,int);
 	~GyroInput();
-	void readAsync();
+	void read();
+	GyroData* data;
 };
 
 #endif // #ifndef __GyroInput_h_

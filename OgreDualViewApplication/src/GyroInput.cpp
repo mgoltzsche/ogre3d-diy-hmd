@@ -30,14 +30,14 @@ GyroInput::~GyroInput() {
 	delete data;
 }
 
-void GyroInput::readAsync() {
+void GyroInput::read() {
 	//write(serial, buffer("#", 1));
 
 	while (true) {
 		int length = 12;
 		char r[length];
 
-		int size = read(*serial, buffer(&r, length), transfer_at_least(length));
+		int size = boost::asio::read(*serial, buffer(&r, length), transfer_at_least(length));
 
 		for (int i = 0; i < length; i++)
 			printf(" %d", r[i]);
