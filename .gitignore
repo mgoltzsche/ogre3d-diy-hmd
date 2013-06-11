@@ -3,8 +3,16 @@
 .project
 .cproject
 .settings
+resources.cfg~
+plugins.cfg~
 Ogre.log
 ogre.cfg
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+OgreApp_d
+*.dat
 
 # Mac OS X
 .DS_Store
