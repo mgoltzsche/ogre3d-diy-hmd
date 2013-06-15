@@ -58,7 +58,7 @@ void BaseApplication::chooseSceneManager(void) {
 	mSceneMgr = mRoot->createSceneManager(Ogre::ST_GENERIC);
 }
 //-------------------------------------------------------------------------------------
-void BaseApplication::createCamera(void) {
+void BaseApplication::createCameras(void) {
 	// Create the camera
 	mCamera = mSceneMgr->createCamera("PlayerCam");
 
@@ -211,7 +211,7 @@ bool BaseApplication::setup(void) {
 		return false;
 
 	chooseSceneManager();
-	createCamera();
+	createCameras();
 	createViewports();
 
 	// Set default mipmap level (NB some APIs ignore this)

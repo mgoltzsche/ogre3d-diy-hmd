@@ -7,7 +7,8 @@
 
 using namespace Ogre;
 
-#define CAMERA_NAME "SceneCamera"
+#define CAMERA_LEFT "LeftCamera"
+#define CAMERA_RIGHT "RightCamera"
 
 /*typedef union {
   float floatingPoint;
@@ -16,64 +17,30 @@ using namespace Ogre;
 
 binaryFloat x = ;*/
 
-DualViewApplication::DualViewApplication(void) :
-		mPrimarySceneMgr(0), mSecondarySceneMgr(0), mDual(false) {
+DualViewApplication::DualViewApplication(void) {
 }
 
 DualViewApplication::~DualViewApplication(void) {
 }
 
 //Local Functions
-void DualViewApplication::setupViewport(Ogre::SceneManager *curr) {
-	mWindow->removeAllViewports();
-
-	Ogre::Camera *cam = curr->getCamera(CAMERA_NAME); //The Camera
-	Ogre::Viewport *vp = mWindow->addViewport(cam); //Our Viewport linked to the camera
-
-	vp->setBackgroundColour(Ogre::ColourValue(0,0,0));
-	cam->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
-}
-
-void DualViewApplication::dualViewport(Ogre::SceneManager *primarySceneMgr,
-		Ogre::SceneManager *secondarySceneMgr) {
-	mWindow->removeAllViewports();
-
-	Ogre::Viewport *vp = 0;
-	Ogre::Camera *cam = primarySceneMgr->getCamera(CAMERA_NAME);
-	vp = mWindow->addViewport(cam, 0, 0, 0, 0.5, 1);
-	vp->setBackgroundColour(Ogre::ColourValue(0,0,0));
-	cam->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
-
-	cam = secondarySceneMgr->getCamera(CAMERA_NAME);
-	vp = mWindow->addViewport(cam, 1, 0.5, 0, 0.5, 1);
-	vp->setBackgroundColour(Ogre::ColourValue(0,0,0));
-	cam->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
-}
-
 void DualViewApplication::createScene(void) {
-	// Set up the space SceneManager
-	mPrimarySceneMgr->setSkyBox(true, "Examples/SpaceSkyBox");
-	// Set up the Cloudy SceneManager
-	mSecondarySceneMgr->setSkyDome(true, "Examples/CloudySky", 5, 8);
+	// Set up the cloudy skydome
+	mSceneMgr->setSkyDome(true, "Examples/CloudySky", 5, 8);
 
-	createScene(mPrimarySceneMgr);
-	createScene(mSecondarySceneMgr);
-}
-
-void DualViewApplication::createScene(SceneManager* scene) {
-	Entity* head1 = scene->createEntity("Head1", "ogrehead.mesh");
-	SceneNode* head1Node = scene->getRootSceneNode()->createChildSceneNode("HeadNode1", Vector3(50, 50, 0));
+	Entity* head1 = mSceneMgr->createEntity("Head1", "ogrehead.mesh");
+	SceneNode* head1Node = mSceneMgr->getRootSceneNode()->createChildSceneNode("HeadNode1", Vector3(50, 50, 0));
 	head1Node->attachObject(head1);
 
-	Entity* head2 = scene->createEntity("Head2", "ogrehead.mesh");
-	SceneNode* head2Node = scene->getRootSceneNode()->createChildSceneNode("HeadNode2", Vector3(-50, 20, 0));
+	Entity* head2 = mSceneMgr->createEntity("Head2", "ogrehead.mesh");
+	SceneNode* head2Node = mSceneMgr->getRootSceneNode()->createChildSceneNode("HeadNode2", Vector3(-50, 20, 0));
 	head2Node->attachObject(head2);
 	head2Node->scale(0.5f, 0.5f, 0.5f);
 	head2Node->yaw(Ogre::Degree(-45));
 
 	// create Ninja
-	Ogre::Entity* ninja = scene->createEntity("Ninja", "ninja.mesh");
-	SceneNode* ninjaNode = scene->getRootSceneNode()->createChildSceneNode("NinjaNode");
+	Ogre::Entity* ninja = mSceneMgr->createEntity("Ninja", "ninja.mesh");
+	SceneNode* ninjaNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("NinjaNode");
 	ninjaNode->attachObject(ninja);
 	ninjaNode->scale(0.3f, 0.3f, 0.3f);
 	ninjaNode->yaw(Ogre::Degree(130));
@@ -84,24 +51,28 @@ void DualViewApplication::createScene(SceneManager* scene) {
 			Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, plane,
 			1500, 1500, 20, 20, true, 1, 5, 5, Ogre::Vector3::UNIT_Z);
 
-	Ogre::Entity* ground = scene->createEntity("Ground", "ground");
+	Ogre::Entity* ground = mSceneMgr->createEntity("Ground", "ground");
 	//ground->setMaterialName("Rockwall.tga");
 	ground->setCastShadows(false);
-	scene->getRootSceneNode()->createChildSceneNode("GroundNode")->attachObject(ground);
+	mSceneMgr->getRootSceneNode()->createChildSceneNode("GroundNode")->attachObject(ground);
 }
 
-void DualViewApplication::chooseSceneManager(void) {
-	mPrimarySceneMgr = mRoot->createSceneManager(Ogre::ST_GENERIC, "primary");
-	mSecondarySceneMgr = mRoot->createSceneManager(Ogre::ST_GENERIC, "secondary");
-}
-
-void DualViewApplication::createCamera() {
-	mPrimarySceneMgr->createCamera(CAMERA_NAME);
-	mSecondarySceneMgr->createCamera(CAMERA_NAME);
+void DualViewApplication::createCameras() {
+	mSceneMgr->createCamera(CAMERA_LEFT);
+	mSceneMgr->createCamera(CAMERA_RIGHT);
 }
 
 void DualViewApplication::createViewports() {
-	setupViewport(mPrimarySceneMgr);
+	Ogre::Viewport *vp = 0;
+	Ogre::Camera *cam1 = mSceneMgr->getCamera(CAMERA_LEFT);
+	vp = mWindow->addViewport(cam1, 0, 0, 0, 0.5, 1);
+	vp->setBackgroundColour(Ogre::ColourValue(0,0,0));
+	cam1->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
+
+	Ogre::Camera *cam2 = mSceneMgr->getCamera(CAMERA_RIGHT);
+	vp = mWindow->addViewport(cam2, 1, 0.5, 0, 0.5, 1);
+	vp->setBackgroundColour(Ogre::ColourValue(0,0,0));
+	cam2->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
 }
 
 void DualViewApplication::createFrameListener(void) {
@@ -116,10 +87,8 @@ void DualViewApplication::createFrameListener(void) {
 
 	mInputManager = OIS::InputManager::createInputSystem(pl);
 
-	mKeyboard = static_cast<OIS::Keyboard*>(mInputManager->createInputObject(
-			OIS::OISKeyboard, true));
-	mMouse = static_cast<OIS::Mouse*>(mInputManager->createInputObject(
-			OIS::OISMouse, true));
+	mKeyboard = static_cast<OIS::Keyboard*>(mInputManager->createInputObject(OIS::OISKeyboard, true));
+	mMouse = static_cast<OIS::Mouse*>(mInputManager->createInputObject(OIS::OISMouse, true));
 
 	mMouse->setEventCallback(this);
 	mKeyboard->setEventCallback(this);
@@ -150,13 +119,6 @@ bool DualViewApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 bool DualViewApplication::keyPressed(const OIS::KeyEvent &arg) {
 	if (arg.key == OIS::KC_ESCAPE) {
 		mShutDown = true;
-	} else if(arg.key == OIS::KC_V){
-	    mDual = !mDual;
-
-	    if (mDual)
-		dualViewport(mPrimarySceneMgr, mSecondarySceneMgr);
-	    else
-		setupViewport(mPrimarySceneMgr);
 	}
 
 	return true;
