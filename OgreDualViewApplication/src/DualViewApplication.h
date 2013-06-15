@@ -1,9 +1,9 @@
 #ifndef __DualViewApplication_h_
 #define __DualViewApplication_h_
 
-#include <Terrain/OgreTerrain.h>
-#include <Terrain/OgreTerrainGroup.h>
 #include "BaseApplication.h"
+
+using namespace Ogre;
 
 class DualViewApplication: public BaseApplication {
 public:
@@ -24,6 +24,9 @@ protected:
 	virtual bool mouseMoved( const OIS::MouseEvent &arg );
 	virtual bool mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
 	virtual bool mouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
+
+private:
+	Camera* createCamera(const String &name, int factor);
 };
 
 #endif // #ifndef __DualViewApplication_h_

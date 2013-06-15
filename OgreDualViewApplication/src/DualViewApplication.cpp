@@ -58,8 +58,24 @@ void DualViewApplication::createScene(void) {
 }
 
 void DualViewApplication::createCameras() {
-	mSceneMgr->createCamera(CAMERA_LEFT);
-	mSceneMgr->createCamera(CAMERA_RIGHT);
+	SceneNode* cameraNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("CameraNode", Vector3(-50, 20, 0));
+
+	Camera* lftCamera = createCamera(CAMERA_LEFT, -1);
+	Camera* rgtCamera = createCamera(CAMERA_RIGHT, 1);
+
+	cameraNode->attachObject(lftCamera);
+	cameraNode->attachObject(rgtCamera);
+	cameraNode->setPosition(0, 100, 200);
+}
+
+Camera* DualViewApplication::createCamera(const String &name, int factor) {
+	Camera* camera = mSceneMgr->createCamera(name);
+
+	camera->setPosition(10 * factor, 0, 0);
+	camera->lookAt(Ogre::Vector3(0, 0, -300));
+	camera->setNearClipDistance(5);
+
+	return camera;
 }
 
 void DualViewApplication::createViewports() {
