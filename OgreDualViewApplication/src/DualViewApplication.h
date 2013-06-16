@@ -28,9 +28,10 @@ protected:
 private:
 	SceneNode* mBodyNode;
 	SceneNode* mCameraNode;
-	Ogre::Real mRotate;
-	Ogre::Real mMove;
-	Ogre::Vector3 mDirection;
+	Real mRotate;
+	Real mMove;
+	Vector3 mDirection;
+	Quaternion mCameraRotation;
 	Camera* createCamera(const String &name, int factor);
 };
 

@@ -11,7 +11,7 @@ using namespace Ogre;
 #define CAMERA_RIGHT "RightCamera"
 
 DualViewApplication::DualViewApplication(void) :
-		mBodyNode(0), mCameraNode(0), mMove(10), mRotate(15), mDirection() {
+		mBodyNode(0), mCameraNode(0), mCameraRotation(), mMove(30), mRotate(20), mDirection() {
 }
 
 DualViewApplication::~DualViewApplication(void) {
@@ -134,7 +134,8 @@ bool DualViewApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 	mKeyboard->capture();
 	mMouse->capture();
 
-	//mCameraNode->translate(mDirection * evt.timeSinceLastFrame, Ogre::Node::TS_LOCAL);
+	mBodyNode->translate(mDirection * evt.timeSinceLastFrame, Ogre::Node::TS_LOCAL);
+	mCameraNode->setOrientation(mCameraRotation);
 
 	return true;
 }
@@ -161,7 +162,7 @@ bool DualViewApplication::keyPressed(const OIS::KeyEvent &evt) {
 		mDirection.x = mMove;
 		break;
 	case OIS::KC_PGDOWN:
-	case OIS::KC_E:
+	case OIS::KC_Y:
 		mDirection.y = -mMove;
 		break;
 	case OIS::KC_PGUP:
@@ -192,7 +193,7 @@ bool DualViewApplication::keyReleased(const OIS::KeyEvent &evt) {
 		mDirection.x = 0;
 		break;
 	case OIS::KC_PGDOWN:
-	case OIS::KC_E:
+	case OIS::KC_Y:
 		mDirection.y = 0;
 		break;
 	case OIS::KC_PGUP:
