@@ -26,6 +26,11 @@ protected:
 	virtual bool mouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
 
 private:
+	SceneNode* mBodyNode;
+	SceneNode* mCameraNode;
+	Ogre::Real mRotate;
+	Ogre::Real mMove;
+	Ogre::Vector3 mDirection;
 	Camera* createCamera(const String &name, int factor);
 };
 
