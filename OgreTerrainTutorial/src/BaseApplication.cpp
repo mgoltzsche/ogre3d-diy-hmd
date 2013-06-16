@@ -188,8 +188,8 @@ void BaseApplication::go(void) {
 	mPluginsCfg = workingDir + mPluginsCfg;
 #endif
 
-	GyroInput gyro("/dev/ttyACM0", 38400);
-	gyro.readAsync();
+	//GyroInput gyro("/dev/ttyACM0", 38400);
+	//gyro.readAsync();
 
 	if (!setup())
 		return;

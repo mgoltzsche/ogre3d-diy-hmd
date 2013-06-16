@@ -66,6 +66,8 @@ void DualViewApplication::createCameras() {
 	cameraNode->attachObject(lftCamera);
 	cameraNode->attachObject(rgtCamera);
 	cameraNode->setPosition(0, 100, 200);
+
+
 }
 
 Camera* DualViewApplication::createCamera(const String &name, int factor) {
