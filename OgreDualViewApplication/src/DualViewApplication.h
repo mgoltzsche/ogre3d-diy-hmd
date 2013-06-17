@@ -32,8 +32,8 @@ private:
 	Real mMove;
 	Vector3 mDirection;
 	Quaternion mCameraRotation;
-	Vector2 mBodyRotation;
 	Camera* createCamera(const String &name, int factor);
+	void setupLight(void);
 };
 
 #endif // #ifndef __DualViewApplication_h_
