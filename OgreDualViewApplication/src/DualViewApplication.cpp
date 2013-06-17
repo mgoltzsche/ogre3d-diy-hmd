@@ -12,7 +12,11 @@ using namespace Ogre;
 #define CAMERA_RIGHT "RightCamera"
 
 DualViewApplication::DualViewApplication(void) :
+<<<<<<< HEAD
 		mBodyNode(0), mCameraNode(0), mCameraRotation(new Quaternion()), mMove(30), mRotate(20), mDirection() {
+=======
+		mBodyNode(0), mCameraNode(0), mCameraRotation(), mBodyRotation(), mMove(70), mRotate(0.1), mDirection() {
+>>>>>>> 9cf38b8ca6d575aef70fd48ecc8eba1bce420901
 }
 
 DualViewApplication::~DualViewApplication(void) {
@@ -164,7 +168,6 @@ bool DualViewApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 //	printf("pitch: %f\tyaw: %f\troll: %f\n", mCameraRotation->getPitch().valueDegrees(), mCameraRotation->getYaw().valueDegrees(),mCameraRotation->getRoll().valueDegrees());
 	mCameraNode->setOrientation(*mCameraRotation);
 
-
 	return true;
 }
 
@@ -236,6 +239,8 @@ bool DualViewApplication::keyReleased(const OIS::KeyEvent &evt) {
 }
 
 bool DualViewApplication::mouseMoved(const OIS::MouseEvent &evt) {
+	mBodyNode->yaw(Degree(-mRotate * evt.state.X.rel), Node::TS_WORLD);
+	mBodyNode->pitch(Degree(-mRotate * evt.state.Y.rel), Node::TS_LOCAL);
 	return true;
 }
 
