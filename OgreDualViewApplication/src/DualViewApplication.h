@@ -9,6 +9,7 @@ class DualViewApplication: public BaseApplication {
 public:
 	DualViewApplication(void);
 	virtual ~DualViewApplication(void);
+	virtual void go(void);
 
 protected:
 	virtual void createScene(void);
@@ -31,7 +32,7 @@ private:
 	Real mRotate;
 	Real mMove;
 	Vector3 mDirection;
-	Quaternion mCameraRotation;
+	Quaternion *mCameraRotation;
 	Camera* createCamera(const String &name, int factor);
 };
 

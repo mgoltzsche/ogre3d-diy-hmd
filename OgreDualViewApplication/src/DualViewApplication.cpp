@@ -1,4 +1,5 @@
 #include "DualViewApplication.h"
+#include "MotionTracker/MotionTracker.h"
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS || OGRE_PLATFORM == OGRE_PLATFORM_APPLE
 #   include <macUtils.h>
@@ -11,10 +12,35 @@ using namespace Ogre;
 #define CAMERA_RIGHT "RightCamera"
 
 DualViewApplication::DualViewApplication(void) :
-		mBodyNode(0), mCameraNode(0), mCameraRotation(), mMove(30), mRotate(20), mDirection() {
+		mBodyNode(0), mCameraNode(0), mCameraRotation(new Quaternion()), mMove(30), mRotate(20), mDirection() {
 }
 
 DualViewApplication::~DualViewApplication(void) {
+}
+
+void DualViewApplication::go(void) {
+#ifdef _DEBUG
+	mResourcesCfg = "resources_d.cfg";
+	mPluginsCfg = "plugins_d.cfg";
+#else
+	mResourcesCfg = "resources.cfg";
+	mPluginsCfg = "plugins.cfg";
+#endif
+
+#if OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS || OGRE_PLATFORM == OGRE_PLATFORM_APPLE
+	Ogre::String workingDir = Ogre::macBundlePath()+"/Contents/Resources/";
+	mResourcesCfg = workingDir + mResourcesCfg;
+	mPluginsCfg = workingDir + mPluginsCfg;
+#endif
+	MotionTracker::create(mCameraRotation);
+
+	if (!setup())
+		return;
+
+	mRoot->startRendering();
+
+	// clean up
+	destroyScene();
 }
 
 //Local Functions
@@ -135,7 +161,9 @@ bool DualViewApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 	mMouse->capture();
 
 	mBodyNode->translate(mDirection * evt.timeSinceLastFrame, Ogre::Node::TS_LOCAL);
-	mCameraNode->setOrientation(mCameraRotation);
+//	printf("pitch: %f\tyaw: %f\troll: %f\n", mCameraRotation->getPitch().valueDegrees(), mCameraRotation->getYaw().valueDegrees(),mCameraRotation->getRoll().valueDegrees());
+	mCameraNode->setOrientation(*mCameraRotation);
+
 
 	return true;
 }
