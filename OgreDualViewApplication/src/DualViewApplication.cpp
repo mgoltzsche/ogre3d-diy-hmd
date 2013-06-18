@@ -32,7 +32,7 @@ void DualViewApplication::go(void) {
 	mResourcesCfg = workingDir + mResourcesCfg;
 	mPluginsCfg = workingDir + mPluginsCfg;
 #endif
-	//MotionTracker::create(mCameraRotation.ptr());
+	MotionTracker::create(&mCameraRotation);
 
 	if (!setup())
 		return;
@@ -186,8 +186,8 @@ bool DualViewApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 
 	mBodyNode->translate(mDirection * evt.timeSinceLastFrame, Ogre::Node::TS_LOCAL);
 //	printf("pitch: %f\tyaw: %f\troll: %f\n", mCameraRotation->getPitch().valueDegrees(), mCameraRotation->getYaw().valueDegrees(),mCameraRotation->getRoll().valueDegrees());
-	//mCameraNode->setOrientation(*mCameraRotation);
-	mCameraNode->rotate(mCameraRotation, Ogre::Node::TS_LOCAL);
+	mCameraNode->setOrientation(mCameraRotation);
+	//mCameraNode->rotate(mCameraRotation, Ogre::Node::TS_LOCAL);
 
 	return true;
 }

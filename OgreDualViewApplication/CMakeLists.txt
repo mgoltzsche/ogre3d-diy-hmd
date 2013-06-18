@@ -112,12 +112,14 @@ set(HDRS
 	./src/BaseApplication.h
 	./src/DualViewApplication.h
 	./src/GyroInput.h
+	./src/MotionTracker/MotionTracker.h
 )
  
 set(SRCS
 	./src/BaseApplication.cpp
 	./src/DualViewApplication.cpp
 	./src/GyroInput.cpp
+	./src/MotionTracker/MotionTracker.cpp
 )
  
 include_directories( ${OIS_INCLUDE_DIRS}
