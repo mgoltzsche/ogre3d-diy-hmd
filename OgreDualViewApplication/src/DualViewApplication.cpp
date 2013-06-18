@@ -12,7 +12,7 @@ using namespace Ogre;
 #define CAMERA_RIGHT "RightCamera"
 
 DualViewApplication::DualViewApplication(void) :
-		mBodyNode(0), mCameraNode(0), mCameraRotation(0), mBodyRotation(), mMove(70), mRotate(0.1), mDirection() {
+		mBodyNode(0), mCameraNode(0), mCameraRotation(), mMove(70), mRotate(0.1), mDirection() {
 }
 
 DualViewApplication::~DualViewApplication(void) {
@@ -32,7 +32,7 @@ void DualViewApplication::go(void) {
 	mResourcesCfg = workingDir + mResourcesCfg;
 	mPluginsCfg = workingDir + mPluginsCfg;
 #endif
-	MotionTracker::create(mCameraRotation);
+	//MotionTracker::create(mCameraRotation.ptr());
 
 	if (!setup())
 		return;
@@ -45,40 +45,67 @@ void DualViewApplication::go(void) {
 
 //Local Functions
 void DualViewApplication::createScene(void) {
+	setupLight();
+
 	// Set up the cloudy skydome
 	mSceneMgr->setSkyDome(true, "Examples/CloudySky", 5, 8);
 
+	SceneNode* rootNode = mSceneMgr->getRootSceneNode();
+
 	Entity* head1 = mSceneMgr->createEntity("Head1", "ogrehead.mesh");
-	SceneNode* head1Node = mSceneMgr->getRootSceneNode()->createChildSceneNode(
-			"HeadNode1", Vector3(50, 50, 0));
+	SceneNode* head1Node = rootNode->createChildSceneNode("HeadNode1", Vector3(50, 50, 0));
 	head1Node->attachObject(head1);
 
 	Entity* head2 = mSceneMgr->createEntity("Head2", "ogrehead.mesh");
-	SceneNode* head2Node = mSceneMgr->getRootSceneNode()->createChildSceneNode(
-			"HeadNode2", Vector3(-50, 20, 0));
+	SceneNode* head2Node = rootNode->createChildSceneNode("HeadNode2", Vector3(-50, 20, 0));
 	head2Node->attachObject(head2);
 	head2Node->scale(0.5f, 0.5f, 0.5f);
 	head2Node->yaw(Ogre::Degree(-45));
 
 	// create Ninja
-	Ogre::Entity* ninja = mSceneMgr->createEntity("Ninja", "ninja.mesh");
-	SceneNode* ninjaNode = mSceneMgr->getRootSceneNode()->createChildSceneNode(
-			"NinjaNode");
+	Entity* ninja = mSceneMgr->createEntity("Ninja", "ninja.mesh");
+	SceneNode* ninjaNode = rootNode->createChildSceneNode("NinjaNode");
 	ninjaNode->attachObject(ninja);
 	ninjaNode->scale(0.3f, 0.3f, 0.3f);
-	ninjaNode->yaw(Ogre::Degree(130));
+	ninjaNode->yaw(Degree(130));
 
 	// create ground
-	Ogre::Plane plane(Ogre::Vector3::UNIT_Y, 0);
-	Ogre::MeshManager::getSingleton().createPlane("ground",
-			Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, plane,
-			1500, 1500, 20, 20, true, 1, 5, 5, Ogre::Vector3::UNIT_Z);
+	Plane plane(Vector3::UNIT_Y, 0);
+	MeshManager::getSingleton().createPlane("ground",
+			ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, plane,
+			1500, 1500, 20, 20, true, 1, 5, 5, Vector3::UNIT_Z);
 
-	Ogre::Entity* ground = mSceneMgr->createEntity("Ground", "ground");
-	//ground->setMaterialName("Rockwall.tga");
+	Entity* ground = mSceneMgr->createEntity("Ground", "ground");
+	ground->setMaterialName("Examples/Rockwall");
 	ground->setCastShadows(false);
-	mSceneMgr->getRootSceneNode()->createChildSceneNode("GroundNode")->attachObject(
-			ground);
+	rootNode->createChildSceneNode("GroundNode")->attachObject(ground);
+}
+
+void DualViewApplication::setupLight(void) {
+	// configure ambient light
+	mSceneMgr->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
+
+	mSceneMgr->createLight("PointLight")->setPosition(1020, 2000, 2000);
+
+	Light* spotLight = mSceneMgr->createLight("SpotLight");
+	spotLight->setType(Light::LT_SPOTLIGHT);
+	spotLight->setDiffuseColour(0.2, 0.3, 1.0);
+	spotLight->setSpecularColour(1.0, 0, 0);
+	spotLight->setDirection(-1, -1, 0);
+	spotLight->setPosition(Vector3(300, 300, 0));
+	spotLight->setSpotlightRange(Degree(10), Degree(30));
+
+	// configure directional light
+	Vector3 direction(0.55, -0.3, 0.75);
+	direction.normalise();
+
+	Light* directionalLight = mSceneMgr->createLight("DirectionalLight");
+	directionalLight->setType(Light::LT_DIRECTIONAL);
+	directionalLight->setDirection(direction);
+	directionalLight->setDiffuseColour(ColourValue(0.2, 0.2, 0.2));
+	directionalLight->setSpecularColour(ColourValue(0.4, 0.4, 0.4));
+
+	mSceneMgr->setAmbientLight(ColourValue(0.1, 0.1, 0.1));
 }
 
 void DualViewApplication::createCameras() {
@@ -132,10 +159,8 @@ void DualViewApplication::createFrameListener(void) {
 
 	mInputManager = OIS::InputManager::createInputSystem(pl);
 
-	mKeyboard = static_cast<OIS::Keyboard*>(mInputManager->createInputObject(
-			OIS::OISKeyboard, true));
-	mMouse = static_cast<OIS::Mouse*>(mInputManager->createInputObject(
-			OIS::OISMouse, true));
+	mKeyboard = static_cast<OIS::Keyboard*>(mInputManager->createInputObject(OIS::OISKeyboard, true));
+	mMouse = static_cast<OIS::Mouse*>(mInputManager->createInputObject(OIS::OISMouse, true));
 
 	mMouse->setEventCallback(this);
 	mKeyboard->setEventCallback(this);
@@ -156,14 +181,13 @@ bool DualViewApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 	if (mShutDown)
 		return false;
 
-	//Need to capture/update each device
 	mKeyboard->capture();
 	mMouse->capture();
 
 	mBodyNode->translate(mDirection * evt.timeSinceLastFrame, Ogre::Node::TS_LOCAL);
 //	printf("pitch: %f\tyaw: %f\troll: %f\n", mCameraRotation->getPitch().valueDegrees(), mCameraRotation->getYaw().valueDegrees(),mCameraRotation->getRoll().valueDegrees());
 	//mCameraNode->setOrientation(*mCameraRotation);
-	mCameraNode->rotate(*mCameraRotation, Ogre::Node::TS_LOCAL);
+	mCameraNode->rotate(mCameraRotation, Ogre::Node::TS_LOCAL);
 
 	return true;
 }
