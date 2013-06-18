@@ -54,7 +54,7 @@ THE SOFTWARE.
 // but want the compiler to shut up about it
 #define I2CDEV_IMPLEMENTATION_WARNINGS
 
-
+#define I2CDEV_SERIAL_DEBUG
 
 // -----------------------------------------------------------------------------
 // I2C interface implementation options
