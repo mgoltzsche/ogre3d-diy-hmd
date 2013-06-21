@@ -192,10 +192,7 @@ void L3G4200D::initialize() {
     I2Cdev::writeByte(devAddr, L3G4200D_RA_INT1_TSH_ZL, 0b00000000);
     I2Cdev::writeByte(devAddr, L3G4200D_RA_INT1_CFG, 0b00000000);
     I2Cdev::writeByte(devAddr, L3G4200D_RA_INT1_CFG, 0b00000000);
-    I2Cdev::writeByte(devAddr, L3G4200D_RA_INT1_DURATION, 0b00000000);
-    I2Cdev::writeBit(devAddr, L3G4200D_RA_CTRL_REG5, 4, 1);
-    I2Cdev::writeBit(devAddr, L3G4200D_RA_CTRL_REG5, 1, 1);
-   
+    I2Cdev::writeByte(devAddr, L3G4200D_RA_INT1_DURATION, 0b00000000);  
 }
 
 /** Verify the I2C connection.
@@ -282,12 +279,31 @@ void L3G4200D::setFIFOMode(uint8_t mode){
     I2Cdev::writeBits(devAddr, L3G4200D_RA_FIFO_CTRL_REG ,L3G4200D_FIFO_CTRL_MODE_BIT, L3G4200D_FIFO_CTRL_MODE_LENGTH ,mode);
 }
 
-uint8_t L3G4200D::getRate(){
+uint8_t getDataRate(){
+    I2Cdev::readBits(devAddr, L3G4200D_RA_CTRL_REG1, L3G4200D_DR_RATE_BIT, L3G4200D_DR_RATE_LENGTH, buffer);
+    return buffer[0];
+}
+
+void setDataRate(uint8_t rate){
+    I2Cdev::writeBits(devAddr, L3G4200D_RA_CTRL_REG1, L3G4200D_DR_RATE_BIT, L3G4200D_DR_RATE_LENGTH, rate);
+}
+
+uint8_t getBandwidth(){
+    I2Cdev::readBits(devAddr, L3G4200D_RA_CTRL_REG1, L3G4200D_BW_RATE_BIT, L3G4200D_BW_RATE_LENGTH, buffer);
+    return buffer[0];
+}
+
+void seetBandwidth(uint8_t bw){
+    I2Cdev::writeBits(devAddr, L3G4200D_RA_CTRL_REG1, L3G4200D_BW_RATE_BIT, L3G4200D_BW_RATE_LENGTH, bw);
+}
+
+
+uint8_t L3G4200D::getDRBWRate(){
     I2Cdev::readBits(devAddr, L3G4200D_RA_CTRL_REG1 ,L3G4200D_DR_BW_RATE_BIT,L3G4200D_DR_BW_RATE_LENGTH , buffer);
     return buffer[0];
 }
 
-void L3G4200D::setRate(uint8_t rate){
+void L3G4200D::setDRBWRate(uint8_t rate){
     I2Cdev::writeBits(devAddr, L3G4200D_RA_CTRL_REG1 ,L3G4200D_DR_BW_RATE_BIT,L3G4200D_DR_BW_RATE_LENGTH ,rate);
 }
 

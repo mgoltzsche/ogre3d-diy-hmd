@@ -80,7 +80,7 @@ int setupL3G4200D(int scale){
   //From  Jim Lindblom of Sparkfun's code
 
     // Enable rollGyroVal, pitchGyroVal, yawGyroVal and turn off power down:
-  writeRegister(L3G4200D_Address, CTRL_REG1, 0b00001111);
+  writeRegister(L3G4200D_Address, CTRL_REG1, 0b11001111);
 
   // If you'd like to adjust/use the HPF, you can edit the line below to configure CTRL_REG2:
   writeRegister(L3G4200D_Address, CTRL_REG2, 0b00000000);

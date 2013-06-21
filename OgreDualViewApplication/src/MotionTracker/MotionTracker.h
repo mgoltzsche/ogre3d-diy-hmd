@@ -16,22 +16,13 @@ class MotionTracker {
     private:
         Quaternion* output;
         serial_port* serial;
-        short avarageZeroRateLevelIndex;
-        float gyroZeroRateLevelX, gyroZeroRateLevelY, gyroZeroRateLevelZ;
-        double gyroScaleFactor;
-
         MotionTracker(Quaternion* _output);
         ~MotionTracker();
 
         short convert(unsigned char lsb, unsigned char msb);
         void assignValues(char *_values);
 
-        void normalise(double *_x, double *_y, double *_z);
-        double length(double _x, double _y, double _z);
-        bool initialiseCommunication();
-
-
-
+        double toRadian(double degree);
 };
 
 #endif

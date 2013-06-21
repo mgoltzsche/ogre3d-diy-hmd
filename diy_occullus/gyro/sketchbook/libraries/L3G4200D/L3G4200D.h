@@ -142,6 +142,12 @@ THE SOFTWARE.
 // constant that it complements. Fields that are a single bit in length don't
 // need a separate field length constant.
 // ----------------------------------------------------------------------------
+#define L3G4200D_DR_RATE_BIT     	    7
+#define L3G4200D_DR_RATE_LENGTH    	    2
+
+#define L3G4200D_BW_RATE_BIT         	5
+#define L3G4200D_BW_RATE_LENGTH        	2
+
 #define L3G4200D_DR_BW_RATE_BIT     	7
 #define L3G4200D_DR_BW_RATE_LENGTH  	4
 #define L3G4200D_PD_BIT			        3
@@ -221,6 +227,16 @@ THE SOFTWARE.
 // are available.
 // ----------------------------------------------------------------------------
 #define L3G4200D_WHO_AM_I			            0b11010011
+
+#define L3G4200D_DR_RATE_100             	    0b00
+#define L3G4200D_DR_RATE_200             	    0b01
+#define L3G4200D_DR_RATE_400             	    0b10
+#define L3G4200D_DR_RATE_800             	    0b11
+
+#define L3G4200D_BW_RATE_0               	    0b00
+#define L3G4200D_BW_RATE_1               	    0b01
+#define L3G4200D_BW_RATE_2               	    0b10
+#define L3G4200D_BW_RATE_3               	    0b11
 
 #define L3G4200D_DR_BW_RATE_ODR100_CO12_5	    0b0000
 #define L3G4200D_DR_BW_RATE_ODR100_CO25_0	    0b0001
@@ -324,8 +340,14 @@ class L3G4200D {
 	    uint8_t getFIFOMode();
 	    void setFIFOMode(uint8_t mode);
 
-        uint8_t getRate();
-        void setRate(uint8_t rate);
+        uint8_t getDataRate();
+        void setDataRate(uint8_t rate);
+
+        uint8_t getBandwidth();
+        void setBandwidth(uint8_t bw);
+
+        uint8_t getDRBWRate();
+        void setDRBWRate(uint8_t bw);
 
 	    uint8_t getScale();
 	    void setScale(uint8_t scale);
