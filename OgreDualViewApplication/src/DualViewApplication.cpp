@@ -12,7 +12,7 @@ using namespace Ogre;
 #define CAMERA_RIGHT "RightCamera"
 
 DualViewApplication::DualViewApplication(void) :
-		mBodyNode(0), mCameraNode(0), mCameraRotation(), mMove(70), mRotate(0.1), mDirection() {
+		mBodyNode(0), mCameraNode(0), mCameraRotation(), mMove(100), mRotate(0.1), mDirection() {
 }
 
 DualViewApplication::~DualViewApplication(void) {
@@ -165,8 +165,13 @@ void DualViewApplication::createFrameListener(void) {
 	mMouse->setEventCallback(this);
 	mKeyboard->setEventCallback(this);
 
+	mDirection.x = mDirection.y = mDirection.z = 0;
+
 	//Set initial mouse clipping size
 	windowResized(mWindow);
+
+	mCameraRotation.x = mCameraRotation.y = mCameraRotation.z = 0;
+	mCameraRotation.w = 1;
 
 	//Register as a Window listener
 	Ogre::WindowEventUtilities::addWindowEventListener(mWindow, this);
@@ -183,7 +188,7 @@ bool DualViewApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 
 	mKeyboard->capture();
 	mMouse->capture();
-
+printf("%.1f  %.1f  %.1f\n", mDirection.x, mDirection.y, mDirection.z);
 	mBodyNode->translate(mDirection * evt.timeSinceLastFrame, Ogre::Node::TS_LOCAL);
 	mCameraNode->setOrientation(mCameraRotation);
 
