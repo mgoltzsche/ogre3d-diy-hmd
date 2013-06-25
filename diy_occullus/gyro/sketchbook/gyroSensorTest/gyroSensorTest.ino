@@ -97,9 +97,6 @@ void setup(){
 }
 
 void loop(){
-  // The main loop is left empty so that you can incorporate the code developed here into
-  // your project. Here is an example of how you may like to use this code in some robotics application...
-
   getGyroValues();
   Serial.print("roll\t");
   Serial.print(rollGyroVal);
