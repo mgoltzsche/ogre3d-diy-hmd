@@ -59,13 +59,10 @@ void BaseApplication::chooseSceneManager(void) {
 	mSceneMgr = mRoot->createSceneManager(Ogre::ST_GENERIC);
 }
 //-------------------------------------------------------------------------------------
-void BaseApplication::createCamera(void) {
-	// Create the camera
+void BaseApplication::createCameras(void) {
 	mCamera = mSceneMgr->createCamera("PlayerCam");
 
-	// Position it at 500 in Z direction
 	mCamera->setPosition(Ogre::Vector3(0, 0, 80));
-	// Look back along -Z
 	mCamera->lookAt(Ogre::Vector3(0, 0, -300));
 	mCamera->setNearClipDistance(5);
 
@@ -84,10 +81,8 @@ void BaseApplication::createFrameListener(void) {
 
 	mInputManager = OIS::InputManager::createInputSystem(pl);
 
-	mKeyboard = static_cast<OIS::Keyboard*>(mInputManager->createInputObject(
-			OIS::OISKeyboard, true));
-	mMouse = static_cast<OIS::Mouse*>(mInputManager->createInputObject(
-			OIS::OISMouse, true));
+	mKeyboard = static_cast<OIS::Keyboard*>(mInputManager->createInputObject(OIS::OISKeyboard, true));
+	mMouse = static_cast<OIS::Mouse*>(mInputManager->createInputObject(OIS::OISMouse, true));
 
 	mMouse->setEventCallback(this);
 	mKeyboard->setEventCallback(this);
@@ -193,8 +188,8 @@ void BaseApplication::go(void) {
 	mPluginsCfg = workingDir + mPluginsCfg;
 #endif
 
-	GyroInput gyro("/dev/ttyACM0", 38400);
-	gyro.readAsync();
+	//GyroInput gyro("/dev/ttyACM0", 38400);
+	//gyro.readAsync();
 
 	if (!setup())
 		return;
@@ -215,7 +210,7 @@ bool BaseApplication::setup(void) {
 		return false;
 
 	chooseSceneManager();
-	createCamera();
+	createCameras();
 	createViewports();
 
 	// Set default mipmap level (NB some APIs ignore this)

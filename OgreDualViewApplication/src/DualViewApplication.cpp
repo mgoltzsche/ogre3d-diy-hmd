@@ -1,4 +1,5 @@
 #include "DualViewApplication.h"
+#include "MotionTracker/MotionTracker.h"
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS || OGRE_PLATFORM == OGRE_PLATFORM_APPLE
 #   include <macUtils.h>
@@ -7,101 +8,143 @@
 
 using namespace Ogre;
 
-#define CAMERA_NAME "SceneCamera"
-
-/*typedef union {
-  float floatingPoint;
-  char binary[4];
-} binaryFloat;
-
-binaryFloat x = ;*/
+#define CAMERA_LEFT "LeftCamera"
+#define CAMERA_RIGHT "RightCamera"
 
 DualViewApplication::DualViewApplication(void) :
-		mPrimarySceneMgr(0), mSecondarySceneMgr(0), mDual(false) {
+		mBodyNode(0), mCameraNode(0), mCameraRotation(), mMove(100), mRotate(0.1), mDirection() {
 }
 
 DualViewApplication::~DualViewApplication(void) {
 }
 
+void DualViewApplication::go(void) {
+#ifdef _DEBUG
+	mResourcesCfg = "resources_d.cfg";
+	mPluginsCfg = "plugins_d.cfg";
+#else
+	mResourcesCfg = "resources.cfg";
+	mPluginsCfg = "plugins.cfg";
+#endif
+
+#if OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS || OGRE_PLATFORM == OGRE_PLATFORM_APPLE
+	Ogre::String workingDir = Ogre::macBundlePath()+"/Contents/Resources/";
+	mResourcesCfg = workingDir + mResourcesCfg;
+	mPluginsCfg = workingDir + mPluginsCfg;
+#endif
+	MotionTracker::create(&mCameraRotation);
+
+	if (!setup())
+		return;
+
+	mRoot->startRendering();
+
+	// clean up
+	destroyScene();
+}
+
 //Local Functions
-void DualViewApplication::setupViewport(Ogre::SceneManager *curr) {
-	mWindow->removeAllViewports();
-
-	Ogre::Camera *cam = curr->getCamera(CAMERA_NAME); //The Camera
-	Ogre::Viewport *vp = mWindow->addViewport(cam); //Our Viewport linked to the camera
-
-	vp->setBackgroundColour(Ogre::ColourValue(0,0,0));
-	cam->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
-}
-
-void DualViewApplication::dualViewport(Ogre::SceneManager *primarySceneMgr,
-		Ogre::SceneManager *secondarySceneMgr) {
-	mWindow->removeAllViewports();
-
-	Ogre::Viewport *vp = 0;
-	Ogre::Camera *cam = primarySceneMgr->getCamera(CAMERA_NAME);
-	vp = mWindow->addViewport(cam, 0, 0, 0, 0.5, 1);
-	vp->setBackgroundColour(Ogre::ColourValue(0,0,0));
-	cam->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
-
-	cam = secondarySceneMgr->getCamera(CAMERA_NAME);
-	vp = mWindow->addViewport(cam, 1, 0.5, 0, 0.5, 1);
-	vp->setBackgroundColour(Ogre::ColourValue(0,0,0));
-	cam->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
-}
-
 void DualViewApplication::createScene(void) {
-	// Set up the space SceneManager
-	mPrimarySceneMgr->setSkyBox(true, "Examples/SpaceSkyBox");
-	// Set up the Cloudy SceneManager
-	mSecondarySceneMgr->setSkyDome(true, "Examples/CloudySky", 5, 8);
+	setupLight();
 
-	createScene(mPrimarySceneMgr);
-	createScene(mSecondarySceneMgr);
-}
+	// Set up the cloudy skydome
+	mSceneMgr->setSkyDome(true, "Examples/CloudySky", 5, 8);
 
-void DualViewApplication::createScene(SceneManager* scene) {
-	Entity* head1 = scene->createEntity("Head1", "ogrehead.mesh");
-	SceneNode* head1Node = scene->getRootSceneNode()->createChildSceneNode("HeadNode1", Vector3(50, 50, 0));
+	SceneNode* rootNode = mSceneMgr->getRootSceneNode();
+
+	Entity* head1 = mSceneMgr->createEntity("Head1", "ogrehead.mesh");
+	SceneNode* head1Node = rootNode->createChildSceneNode("HeadNode1", Vector3(50, 50, 0));
 	head1Node->attachObject(head1);
 
-	Entity* head2 = scene->createEntity("Head2", "ogrehead.mesh");
-	SceneNode* head2Node = scene->getRootSceneNode()->createChildSceneNode("HeadNode2", Vector3(-50, 20, 0));
+	Entity* head2 = mSceneMgr->createEntity("Head2", "ogrehead.mesh");
+	SceneNode* head2Node = rootNode->createChildSceneNode("HeadNode2", Vector3(-50, 20, 0));
 	head2Node->attachObject(head2);
 	head2Node->scale(0.5f, 0.5f, 0.5f);
 	head2Node->yaw(Ogre::Degree(-45));
 
 	// create Ninja
-	Ogre::Entity* ninja = scene->createEntity("Ninja", "ninja.mesh");
-	SceneNode* ninjaNode = scene->getRootSceneNode()->createChildSceneNode("NinjaNode");
+	Entity* ninja = mSceneMgr->createEntity("Ninja", "ninja.mesh");
+	SceneNode* ninjaNode = rootNode->createChildSceneNode("NinjaNode");
 	ninjaNode->attachObject(ninja);
 	ninjaNode->scale(0.3f, 0.3f, 0.3f);
-	ninjaNode->yaw(Ogre::Degree(130));
+	ninjaNode->yaw(Degree(130));
 
 	// create ground
-	Ogre::Plane plane(Ogre::Vector3::UNIT_Y, 0);
-	Ogre::MeshManager::getSingleton().createPlane("ground",
-			Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, plane,
-			1500, 1500, 20, 20, true, 1, 5, 5, Ogre::Vector3::UNIT_Z);
+	Plane plane(Vector3::UNIT_Y, 0);
+	MeshManager::getSingleton().createPlane("ground",
+			ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, plane,
+			1500, 1500, 20, 20, true, 1, 5, 5, Vector3::UNIT_Z);
 
-	Ogre::Entity* ground = scene->createEntity("Ground", "ground");
-	//ground->setMaterialName("Rockwall.tga");
+	Entity* ground = mSceneMgr->createEntity("Ground", "ground");
+	ground->setMaterialName("Examples/Rockwall");
 	ground->setCastShadows(false);
-	scene->getRootSceneNode()->createChildSceneNode("GroundNode")->attachObject(ground);
+	rootNode->createChildSceneNode("GroundNode")->attachObject(ground);
 }
 
-void DualViewApplication::chooseSceneManager(void) {
-	mPrimarySceneMgr = mRoot->createSceneManager(Ogre::ST_GENERIC, "primary");
-	mSecondarySceneMgr = mRoot->createSceneManager(Ogre::ST_GENERIC, "secondary");
+void DualViewApplication::setupLight(void) {
+	// configure ambient light
+	mSceneMgr->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
+
+	mSceneMgr->createLight("PointLight")->setPosition(1020, 2000, 2000);
+
+	Light* spotLight = mSceneMgr->createLight("SpotLight");
+	spotLight->setType(Light::LT_SPOTLIGHT);
+	spotLight->setDiffuseColour(0.2, 0.3, 1.0);
+	spotLight->setSpecularColour(1.0, 0, 0);
+	spotLight->setDirection(-1, -1, 0);
+	spotLight->setPosition(Vector3(300, 300, 0));
+	spotLight->setSpotlightRange(Degree(10), Degree(30));
+
+	// configure directional light
+	Vector3 direction(0.55, -0.3, 0.75);
+	direction.normalise();
+
+	Light* directionalLight = mSceneMgr->createLight("DirectionalLight");
+	directionalLight->setType(Light::LT_DIRECTIONAL);
+	directionalLight->setDirection(direction);
+	directionalLight->setDiffuseColour(ColourValue(0.2, 0.2, 0.2));
+	directionalLight->setSpecularColour(ColourValue(0.4, 0.4, 0.4));
+
+	mSceneMgr->setAmbientLight(ColourValue(0.1, 0.1, 0.1));
 }
 
-void DualViewApplication::createCamera() {
-	mPrimarySceneMgr->createCamera(CAMERA_NAME);
-	mSecondarySceneMgr->createCamera(CAMERA_NAME);
+void DualViewApplication::createCameras() {
+	SceneNode* rootNode = mSceneMgr->getRootSceneNode();
+	mBodyNode = rootNode->createChildSceneNode("BodyNode", Vector3(0, 50, 200));
+	mCameraNode = mBodyNode->createChildSceneNode("CameraNode");
+	Camera* lftCamera = createCamera(CAMERA_LEFT, -1);
+	Camera* rgtCamera = createCamera(CAMERA_RIGHT, 1);
+
+	mCameraNode->attachObject(lftCamera);
+	mCameraNode->attachObject(rgtCamera);
+
+}
+
+Camera* DualViewApplication::createCamera(const String &name, int factor) {
+	Camera* camera = mSceneMgr->createCamera(name);
+
+	camera->setPosition(10 * factor, 0, 0);
+	camera->lookAt(Ogre::Vector3(0, 0, -300));
+	camera->setNearClipDistance(5);
+
+	return camera;
 }
 
 void DualViewApplication::createViewports() {
-	setupViewport(mPrimarySceneMgr);
+	Ogre::Viewport *vp = 0;
+	Ogre::Camera *cam1 = mSceneMgr->getCamera(CAMERA_LEFT);
+	vp = mWindow->addViewport(cam1, 0, 0, 0, 0.5, 1);
+	vp->setBackgroundColour(Ogre::ColourValue(0, 0, 0));
+	cam1->setAspectRatio(
+			Ogre::Real(vp->getActualWidth())
+					/ Ogre::Real(vp->getActualHeight()));
+
+	Ogre::Camera *cam2 = mSceneMgr->getCamera(CAMERA_RIGHT);
+	vp = mWindow->addViewport(cam2, 1, 0.5, 0, 0.5, 1);
+	vp->setBackgroundColour(Ogre::ColourValue(0, 0, 0));
+	cam2->setAspectRatio(
+			Ogre::Real(vp->getActualWidth())
+					/ Ogre::Real(vp->getActualHeight()));
 }
 
 void DualViewApplication::createFrameListener(void) {
@@ -116,16 +159,19 @@ void DualViewApplication::createFrameListener(void) {
 
 	mInputManager = OIS::InputManager::createInputSystem(pl);
 
-	mKeyboard = static_cast<OIS::Keyboard*>(mInputManager->createInputObject(
-			OIS::OISKeyboard, true));
-	mMouse = static_cast<OIS::Mouse*>(mInputManager->createInputObject(
-			OIS::OISMouse, true));
+	mKeyboard = static_cast<OIS::Keyboard*>(mInputManager->createInputObject(OIS::OISKeyboard, true));
+	mMouse = static_cast<OIS::Mouse*>(mInputManager->createInputObject(OIS::OISMouse, true));
 
 	mMouse->setEventCallback(this);
 	mKeyboard->setEventCallback(this);
 
+	mDirection.x = mDirection.y = mDirection.z = 0;
+
 	//Set initial mouse clipping size
 	windowResized(mWindow);
+
+	mCameraRotation.x = mCameraRotation.y = mCameraRotation.z = 0;
+	mCameraRotation.w = 1;
 
 	//Register as a Window listener
 	Ogre::WindowEventUtilities::addWindowEventListener(mWindow, this);
@@ -140,47 +186,97 @@ bool DualViewApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 	if (mShutDown)
 		return false;
 
-	//Need to capture/update each device
 	mKeyboard->capture();
 	mMouse->capture();
+printf("%.1f  %.1f  %.1f\n", mDirection.x, mDirection.y, mDirection.z);
+	mBodyNode->translate(mDirection * evt.timeSinceLastFrame, Ogre::Node::TS_LOCAL);
+	mCameraNode->setOrientation(mCameraRotation);
 
 	return true;
 }
 
-bool DualViewApplication::keyPressed(const OIS::KeyEvent &arg) {
-	if (arg.key == OIS::KC_ESCAPE) {
+bool DualViewApplication::keyPressed(const OIS::KeyEvent &evt) {
+	switch (evt.key) {
+	case OIS::KC_ESCAPE:
 		mShutDown = true;
-	} else if(arg.key == OIS::KC_V){
-	    mDual = !mDual;
-
-	    if (mDual)
-		dualViewport(mPrimarySceneMgr, mSecondarySceneMgr);
-	    else
-		setupViewport(mPrimarySceneMgr);
+		break;
+	case OIS::KC_UP:
+	case OIS::KC_W:
+		mDirection.z = -mMove;
+		break;
+	case OIS::KC_DOWN:
+	case OIS::KC_S:
+		mDirection.z = mMove;
+		break;
+	case OIS::KC_LEFT:
+	case OIS::KC_A:
+		mDirection.x = -mMove;
+		break;
+	case OIS::KC_RIGHT:
+	case OIS::KC_D:
+		mDirection.x = mMove;
+		break;
+	case OIS::KC_PGDOWN:
+	case OIS::KC_Y:
+		mDirection.y = -mMove;
+		break;
+	case OIS::KC_PGUP:
+	case OIS::KC_Q:
+		mDirection.y = mMove;
+		break;
 	}
 
 	return true;
 }
 
-bool DualViewApplication::keyReleased(const OIS::KeyEvent &arg) {
+bool DualViewApplication::keyReleased(const OIS::KeyEvent &evt) {
+	switch (evt.key) {
+	case OIS::KC_UP:
+	case OIS::KC_W:
+		mDirection.z = 0;
+		break;
+	case OIS::KC_DOWN:
+	case OIS::KC_S:
+		mDirection.z = 0;
+		break;
+	case OIS::KC_LEFT:
+	case OIS::KC_A:
+		mDirection.x = 0;
+		break;
+	case OIS::KC_RIGHT:
+	case OIS::KC_D:
+		mDirection.x = 0;
+		break;
+	case OIS::KC_PGDOWN:
+	case OIS::KC_Y:
+		mDirection.y = 0;
+		break;
+	case OIS::KC_PGUP:
+	case OIS::KC_Q:
+		mDirection.y = 0;
+		break;
+	default:
+		break;
+	}
+
 	return true;
 }
 
-bool DualViewApplication::mouseMoved(const OIS::MouseEvent &arg) {
+bool DualViewApplication::mouseMoved(const OIS::MouseEvent &evt) {
+	mBodyNode->yaw(Degree(-mRotate * evt.state.X.rel), Node::TS_WORLD);
+	mBodyNode->pitch(Degree(-mRotate * evt.state.Y.rel), Node::TS_LOCAL);
 	return true;
 }
 
-bool DualViewApplication::mousePressed(const OIS::MouseEvent &arg,
+bool DualViewApplication::mousePressed(const OIS::MouseEvent &evt,
 		OIS::MouseButtonID id) {
 	return true;
 }
 
-bool DualViewApplication::mouseReleased(const OIS::MouseEvent &arg,
+bool DualViewApplication::mouseReleased(const OIS::MouseEvent &evt,
 		OIS::MouseButtonID id) {
 	return true;
 }
-
-
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 #define WIN32_LEAN_AND_MEAN

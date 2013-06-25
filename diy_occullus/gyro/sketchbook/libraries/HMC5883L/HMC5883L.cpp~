@@ -276,13 +276,7 @@ void HMC5883L::getHeading(int16_t *x, int16_t *y, int16_t *z) {
 }
 
 void HMC5883L::getRawHeading(uint8_t *_buffer) {
-    I2Cdev::readBytes(devAddr, HMC5883L_RA_DATAX_H, 6, buffer);
-    _buffer[0] = buffer[1];
-    _buffer[1] = buffer[0];
-    _buffer[2] = buffer[3];
-    _buffer[3] = buffer[2];
-    _buffer[4] = buffer[5];
-    _buffer[5] = buffer[4];
+    I2Cdev::readBytes(devAddr, HMC5883L_RA_DATAX_H, 6, _buffer);
 }
 
 /** Get X-axis heading measurement.

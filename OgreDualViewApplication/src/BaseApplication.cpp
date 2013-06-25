@@ -58,13 +58,10 @@ void BaseApplication::chooseSceneManager(void) {
 	mSceneMgr = mRoot->createSceneManager(Ogre::ST_GENERIC);
 }
 //-------------------------------------------------------------------------------------
-void BaseApplication::createCamera(void) {
-	// Create the camera
+void BaseApplication::createCameras(void) {
 	mCamera = mSceneMgr->createCamera("PlayerCam");
 
-	// Position it at 500 in Z direction
 	mCamera->setPosition(Ogre::Vector3(0, 0, 80));
-	// Look back along -Z
 	mCamera->lookAt(Ogre::Vector3(0, 0, -300));
 	mCamera->setNearClipDistance(5);
 
@@ -211,7 +208,7 @@ bool BaseApplication::setup(void) {
 		return false;
 
 	chooseSceneManager();
-	createCamera();
+	createCameras();
 	createViewports();
 
 	// Set default mipmap level (NB some APIs ignore this)

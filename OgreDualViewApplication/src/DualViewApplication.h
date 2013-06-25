@@ -1,23 +1,21 @@
 #ifndef __DualViewApplication_h_
 #define __DualViewApplication_h_
 
-#include <Terrain/OgreTerrain.h>
-#include <Terrain/OgreTerrainGroup.h>
 #include "BaseApplication.h"
+
+using namespace Ogre;
 
 class DualViewApplication: public BaseApplication {
 public:
 	DualViewApplication(void);
 	virtual ~DualViewApplication(void);
+	virtual void go(void);
 
 protected:
 	virtual void createScene(void);
-	virtual void createScene(Ogre::SceneManager*);
-	virtual void chooseSceneManager(void);
-	virtual void createCamera(void);
+	virtual void createCameras(void);
 	virtual void createViewports(void);
 	virtual void createFrameListener(void);
-
 	virtual bool frameRenderingQueued(const Ogre::FrameEvent& evt);
 
 	// OIS::KeyListener
@@ -29,12 +27,14 @@ protected:
 	virtual bool mouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
 
 private:
-	Ogre::SceneManager* mPrimarySceneMgr;
-	Ogre::SceneManager* mSecondarySceneMgr;
-	bool mDual;
-
-	virtual void setupViewport(Ogre::SceneManager *curr);
-	virtual void dualViewport(Ogre::SceneManager *primarySceneMgr, Ogre::SceneManager *secondarySceneMgr);
+	SceneNode* mBodyNode;
+	SceneNode* mCameraNode;
+	Real mRotate;
+	Real mMove;
+	Vector3 mDirection;
+	Quaternion mCameraRotation;
+	Camera* createCamera(const String &name, int factor);
+	void setupLight(void);
 };
 
 #endif // #ifndef __DualViewApplication_h_

@@ -337,7 +337,7 @@ class ADXL345 {
 
         // DATA* registers
         void getAcceleration(int16_t* x, int16_t* y, int16_t* z);
-        void getRawAcceleration(uint8_t *_buffer);
+        void getRawAcceleration(uint8_t *_buffer){
         int16_t getAccelerationX();
         int16_t getAccelerationY();
         int16_t getAccelerationZ();
