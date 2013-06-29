@@ -1,3 +1,4 @@
+
 // Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
 // is used in I2Cdev.h
 #include <Wire.h>
@@ -32,7 +33,7 @@ uint8_t buffer[6];
 int16_t x, y, z;
 int16_t gyroXZR, gyroYZR, gyroZZR;
 
-long prevTime, currentTime;
+unsigned long prevTime, currentTime;
 
 void setup() {
   //Enable PowerSupply to Motion Shield
@@ -60,7 +61,7 @@ void setup() {
   zeroRateCompensationIndex = 0;
   zeroRateCompensationNSamples = 50;
   gyroThreshHold = 50;
-  prevTime = millis();
+  prevTime = micros();
 
 }
 
@@ -106,7 +107,10 @@ void loop() {
       output[16] = buffer[4];
       output[17] = buffer[5];
 
-      Serial.write(output, 22);      
+      currentTime = micros();
+      convertAndInsert(((int16_t)currentTime - prevTime), 20);
+      Serial.write(output, 22);     
+      prevTime = currentTime; 
 
     }
   } 
@@ -133,19 +137,20 @@ void setupGyro(){
   else if (gyro.getScale() == L3G4200D_SCALE_RATE_250DPS){
     convertAndInsert(250, 18);
   }
-
+  /*
   if(gyro.getDataRate() == L3G4200D_DR_RATE_800){
-    convertAndInsert(800, 20);
-  }
-  else if(gyro.getDataRate() == L3G4200D_DR_RATE_400){
-    convertAndInsert(400, 20);
-  }
-  else if(gyro.getDataRate() == L3G4200D_DR_RATE_200){
-    convertAndInsert(200, 20);
-  }
-  else if(gyro.getDataRate() == L3G4200D_DR_RATE_100){
-    convertAndInsert(100, 20);
-  }
+   convertAndInsert(800, 20);
+   }
+   else if(gyro.getDataRate() == L3G4200D_DR_RATE_400){
+   convertAndInsert(400, 20);
+   }
+   else if(gyro.getDataRate() == L3G4200D_DR_RATE_200){
+   convertAndInsert(200, 20);
+   }
+   else if(gyro.getDataRate() == L3G4200D_DR_RATE_100){
+   convertAndInsert(100, 20);
+   }
+   */
 
 }
 
@@ -153,19 +158,3 @@ void convertAndInsert(int16_t value, uint8_t index ){
   output[index]   = value % 256 ;
   output[index+1] = value / 256;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

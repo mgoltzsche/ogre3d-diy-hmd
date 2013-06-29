@@ -51,7 +51,8 @@ void MotionTracker::read() {
 
 void MotionTracker::assignValues(char *_values) {
 	double scaleRate = convert(_values[18], _values[19]);
-	double timeDelta = 1.0 / convert(_values[20], _values[21]);
+	double timeDelta = convert(_values[20], _values[21]) / pow(10, 6);
+	//printf("timeDelta %f\n", timeDelta);
 
 	if (scaleRate == 2000) {
 		scaleRate = 70.0 / 1000;
@@ -76,7 +77,7 @@ void MotionTracker::assignValues(char *_values) {
 	double magZ = convert(_values[16], _values[17]);
 
 	Vector3 axes(pitch, yaw, roll);
-	Quaternion currentRot(Radian(axes.length()*timeDelta), axes);
+	Quaternion currentRot(Radian(axes.length() * timeDelta), axes);
 
 	currentRot.normalise();
 	currentRot = *output * currentRot;

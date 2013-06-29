@@ -188,7 +188,7 @@ bool DualViewApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 
 	mKeyboard->capture();
 	mMouse->capture();
-printf("%.1f  %.1f  %.1f\n", mDirection.x, mDirection.y, mDirection.z);
+//printf("%.1f  %.1f  %.1f\n", mDirection.x, mDirection.y, mDirection.z);
 	mBodyNode->translate(mDirection * evt.timeSinceLastFrame, Ogre::Node::TS_LOCAL);
 	mCameraNode->setOrientation(mCameraRotation);
 
