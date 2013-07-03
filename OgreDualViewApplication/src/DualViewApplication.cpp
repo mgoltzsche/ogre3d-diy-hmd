@@ -11,6 +11,8 @@ using namespace Ogre;
 #define CAMERA_LEFT "LeftCamera"
 #define CAMERA_RIGHT "RightCamera"
 
+const float DEFAULT_DISTORTION[4] = {1.0f, 0.22f, 0.24f, 0};
+
 DualViewApplication::DualViewApplication(void) :
 		mBodyNode(0), mCameraNode(0), mCameraRotation(), mMove(100), mRotate(0.1), mDirection() {
 }
@@ -32,7 +34,7 @@ void DualViewApplication::go(void) {
 	mResourcesCfg = workingDir + mResourcesCfg;
 	mPluginsCfg = workingDir + mPluginsCfg;
 #endif
-	MotionTracker::create(&mCameraRotation);
+	//MotionTracker::create(&mCameraRotation);
 
 	if (!setup())
 		return;
@@ -44,8 +46,9 @@ void DualViewApplication::go(void) {
 }
 
 //Local Functions
-void DualViewApplication::createScene(void) {
+void DualViewApplication::createScene() {
 	setupLight();
+	setupHmdPostProcessing();
 
 	// Set up the cloudy skydome
 	mSceneMgr->setSkyDome(true, "Examples/CloudySky", 5, 8);
@@ -81,7 +84,35 @@ void DualViewApplication::createScene(void) {
 	rootNode->createChildSceneNode("GroundNode")->attachObject(ground);
 }
 
-void DualViewApplication::setupLight(void) {
+void DualViewApplication::setupHmdPostProcessing() {
+	MaterialPtr matLeft = MaterialManager::getSingleton().getByName("Ogre/Compositor/Oculus");
+	MaterialPtr matRight = matLeft->clone("Ogre/Compositor/Oculus/Right");
+	GpuProgramParametersSharedPtr pParamsLeft = matLeft->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
+	GpuProgramParametersSharedPtr pParamsRight = matRight->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
+	Vector4 hmdWarp = Vector4(
+			DEFAULT_DISTORTION[0],
+			DEFAULT_DISTORTION[1],
+			DEFAULT_DISTORTION[2],
+			DEFAULT_DISTORTION[3]
+	);
+	float projectionCenterOffset = 0.07;
+
+	pParamsLeft->setNamedConstant("HmdWarpParam", hmdWarp);
+	pParamsRight->setNamedConstant("HmdWarpParam", hmdWarp);
+	pParamsLeft->setNamedConstant("LensCentre", 0.5f + projectionCenterOffset);
+	pParamsRight->setNamedConstant("LensCentre", 0.5f - projectionCenterOffset);
+
+	CompositorPtr comp = Ogre::CompositorManager::getSingleton().getByName("OculusRight");
+	comp->getTechnique(0)->getOutputTargetPass()->getPass(0)->setMaterialName("Ogre/Compositor/Oculus/Right");
+
+	CompositorInstance* leftComp = CompositorManager::getSingleton().addCompositor(leftViewport, "OculusLeft");
+	CompositorInstance* rightComp = CompositorManager::getSingleton().addCompositor(rightViewport, "OculusRight");
+
+	leftComp->setEnabled(true);
+	rightComp->setEnabled(true);
+}
+
+void DualViewApplication::setupLight() {
 	// configure ambient light
 	mSceneMgr->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
 
@@ -131,20 +162,19 @@ Camera* DualViewApplication::createCamera(const String &name, int factor) {
 }
 
 void DualViewApplication::createViewports() {
-	Ogre::Viewport *vp = 0;
-	Ogre::Camera *cam1 = mSceneMgr->getCamera(CAMERA_LEFT);
-	vp = mWindow->addViewport(cam1, 0, 0, 0, 0.5, 1);
-	vp->setBackgroundColour(Ogre::ColourValue(0, 0, 0));
-	cam1->setAspectRatio(
-			Ogre::Real(vp->getActualWidth())
-					/ Ogre::Real(vp->getActualHeight()));
+	Camera *cam = mSceneMgr->getCamera(CAMERA_LEFT);
+	leftViewport = mWindow->addViewport(cam, 0, 0, 0, 0.5, 1);
+	leftViewport->setBackgroundColour(ColourValue(0, 0, 0));
+	cam->setAspectRatio(
+			Real(leftViewport->getActualWidth())
+					/ Real(leftViewport->getActualHeight()));
 
-	Ogre::Camera *cam2 = mSceneMgr->getCamera(CAMERA_RIGHT);
-	vp = mWindow->addViewport(cam2, 1, 0.5, 0, 0.5, 1);
-	vp->setBackgroundColour(Ogre::ColourValue(0, 0, 0));
-	cam2->setAspectRatio(
-			Ogre::Real(vp->getActualWidth())
-					/ Ogre::Real(vp->getActualHeight()));
+	cam = mSceneMgr->getCamera(CAMERA_RIGHT);
+	rightViewport = mWindow->addViewport(cam, 1, 0.5, 0, 0.5, 1);
+	rightViewport->setBackgroundColour(ColourValue(0, 0, 0));
+	cam->setAspectRatio(
+			Real(rightViewport->getActualWidth())
+					/ Real(rightViewport->getActualHeight()));
 }
 
 void DualViewApplication::createFrameListener(void) {

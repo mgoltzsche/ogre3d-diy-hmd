@@ -33,8 +33,11 @@ private:
 	Real mMove;
 	Vector3 mDirection;
 	Quaternion mCameraRotation;
+	Viewport* leftViewport;
+	Viewport* rightViewport;
 	Camera* createCamera(const String &name, int factor);
 	void setupLight(void);
+	void setupHmdPostProcessing(void);
 };
 
 #endif // #ifndef __DualViewApplication_h_
