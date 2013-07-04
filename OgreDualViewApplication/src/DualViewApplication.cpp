@@ -10,11 +10,16 @@ using namespace Ogre;
 
 #define CAMERA_LEFT "LeftCamera"
 #define CAMERA_RIGHT "RightCamera"
+#define HSCREEN_SIZE 0.14976f
+#define VSCREEN_SIZE 0.0935f
+#define EYE_TO_SCREEN_DISTANCE 0.068f
+#define IPD 0.064f
 
+const float projectionCenterOffset = 0.14;
 const float DEFAULT_DISTORTION[4] = {1.0f, 0.22f, 0.24f, 0};
 
 DualViewApplication::DualViewApplication(void) :
-		mBodyNode(0), mCameraNode(0), mCameraRotation(), mMove(100), mRotate(0.1), mDirection() {
+		mBodyNode(0), mCameraNode(0), mCameraRotation(), mMove(100), mRotate(0.1), mDirection(), leftViewport(0), rightViewport(0) {
 }
 
 DualViewApplication::~DualViewApplication(void) {
@@ -84,34 +89,6 @@ void DualViewApplication::createScene() {
 	rootNode->createChildSceneNode("GroundNode")->attachObject(ground);
 }
 
-void DualViewApplication::setupHmdPostProcessing() {
-	MaterialPtr matLeft = MaterialManager::getSingleton().getByName("Ogre/Compositor/Oculus");
-	MaterialPtr matRight = matLeft->clone("Ogre/Compositor/Oculus/Right");
-	GpuProgramParametersSharedPtr pParamsLeft = matLeft->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
-	GpuProgramParametersSharedPtr pParamsRight = matRight->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
-	Vector4 hmdWarp = Vector4(
-			DEFAULT_DISTORTION[0],
-			DEFAULT_DISTORTION[1],
-			DEFAULT_DISTORTION[2],
-			DEFAULT_DISTORTION[3]
-	);
-	float projectionCenterOffset = 0.07;
-
-	pParamsLeft->setNamedConstant("HmdWarpParam", hmdWarp);
-	pParamsRight->setNamedConstant("HmdWarpParam", hmdWarp);
-	pParamsLeft->setNamedConstant("LensCentre", 0.5f + projectionCenterOffset);
-	pParamsRight->setNamedConstant("LensCentre", 0.5f - projectionCenterOffset);
-
-	CompositorPtr comp = Ogre::CompositorManager::getSingleton().getByName("OculusRight");
-	comp->getTechnique(0)->getOutputTargetPass()->getPass(0)->setMaterialName("Ogre/Compositor/Oculus/Right");
-
-	CompositorInstance* leftComp = CompositorManager::getSingleton().addCompositor(leftViewport, "OculusLeft");
-	CompositorInstance* rightComp = CompositorManager::getSingleton().addCompositor(rightViewport, "OculusRight");
-
-	leftComp->setEnabled(true);
-	rightComp->setEnabled(true);
-}
-
 void DualViewApplication::setupLight() {
 	// configure ambient light
 	mSceneMgr->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
@@ -120,7 +97,7 @@ void DualViewApplication::setupLight() {
 
 	Light* spotLight = mSceneMgr->createLight("SpotLight");
 	spotLight->setType(Light::LT_SPOTLIGHT);
-	spotLight->setDiffuseColour(0.2, 0.3, 1.0);
+	spotLight->setDiffuseColour(0.2, 0.2, 0.2);
 	spotLight->setSpecularColour(1.0, 0, 0);
 	spotLight->setDirection(-1, -1, 0);
 	spotLight->setPosition(Vector3(300, 300, 0));
@@ -139,6 +116,33 @@ void DualViewApplication::setupLight() {
 	mSceneMgr->setAmbientLight(ColourValue(0.1, 0.1, 0.1));
 }
 
+void DualViewApplication::setupHmdPostProcessing() {
+	MaterialPtr matLeft = MaterialManager::getSingleton().getByName("Ogre/Compositor/Oculus");
+	MaterialPtr matRight = matLeft->clone("Ogre/Compositor/Oculus/Right");
+	GpuProgramParametersSharedPtr pParamsLeft = matLeft->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
+	GpuProgramParametersSharedPtr pParamsRight = matRight->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
+	Vector4 hmdWarp = Vector4(
+			DEFAULT_DISTORTION[0],
+			DEFAULT_DISTORTION[1],
+			DEFAULT_DISTORTION[2],
+			DEFAULT_DISTORTION[3]
+	);
+
+	pParamsLeft->setNamedConstant("HmdWarpParam", hmdWarp);
+	pParamsRight->setNamedConstant("HmdWarpParam", hmdWarp);
+	pParamsLeft->setNamedConstant("LensCentre", 0.5f + projectionCenterOffset / 2.0f);
+	pParamsRight->setNamedConstant("LensCentre", 0.5f - projectionCenterOffset / 2.0f);
+
+	CompositorPtr comp = Ogre::CompositorManager::getSingleton().getByName("OculusRight");
+	comp->getTechnique(0)->getOutputTargetPass()->getPass(0)->setMaterialName("Ogre/Compositor/Oculus/Right");
+
+	CompositorInstance* leftComp = CompositorManager::getSingleton().addCompositor(leftViewport, "OculusLeft");
+	CompositorInstance* rightComp = CompositorManager::getSingleton().addCompositor(rightViewport, "OculusRight");
+
+	leftComp->setEnabled(true);
+	rightComp->setEnabled(true);
+}
+
 void DualViewApplication::createCameras() {
 	SceneNode* rootNode = mSceneMgr->getRootSceneNode();
 	mBodyNode = rootNode->createChildSceneNode("BodyNode", Vector3(0, 50, 200));
@@ -148,15 +152,20 @@ void DualViewApplication::createCameras() {
 
 	mCameraNode->attachObject(lftCamera);
 	mCameraNode->attachObject(rgtCamera);
-
 }
 
 Camera* DualViewApplication::createCamera(const String &name, int factor) {
 	Camera* camera = mSceneMgr->createCamera(name);
 
-	camera->setPosition(10 * factor, 0, 0);
-	camera->lookAt(Ogre::Vector3(0, 0, -300));
-	camera->setNearClipDistance(5);
+	camera->setPosition(IPD * 0.5 * factor, 0, 0);
+	camera->lookAt(Vector3(0, 0, -300));
+	camera->setNearClipDistance(EYE_TO_SCREEN_DISTANCE);
+	camera->setFarClipDistance(10000);
+	camera->setFOVy(Radian(Degree(85)));
+
+	Matrix4 proj = Matrix4::IDENTITY;
+	proj.setTrans(Vector3(-projectionCenterOffset * factor, 0, 0));
+	camera->setCustomProjectionMatrix(true, proj * camera->getProjectionMatrix());
 
 	return camera;
 }
