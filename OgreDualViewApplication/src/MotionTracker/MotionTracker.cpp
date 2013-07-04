@@ -7,6 +7,7 @@
 
 #include "MotionTracker.h"
 #include <math.h>
+#include <algorithm>
 
 static void startReading(MotionTracker* _mt) {
 	while (true) {
@@ -21,7 +22,8 @@ void MotionTracker::create(Quaternion *_output) {
 }
 
 MotionTracker::MotionTracker(Quaternion *_output) :
-		driftCounter(0), avAcc(Vector3(0.0)) {
+		driftCounter(0), compensationCounter(0.0f), avAcc(Vector3(0.0)), tiltAxis(
+				Vector3(0.0)) {
 	output = _output;
 
 	serial_port_base::baud_rate BAUD(38400);
@@ -53,7 +55,6 @@ void MotionTracker::read() {
 void MotionTracker::assignValues(char *_values) {
 	double scaleRate = convert(_values[18], _values[19]);
 	double timeDelta = convert(_values[20], _values[21]) / pow(10, 6);
-	//printf("timeDelta %f\n", timeDelta);
 
 	if (scaleRate == 2000) {
 		scaleRate = 70.0 / 1000;
@@ -88,36 +89,36 @@ void MotionTracker::assignValues(char *_values) {
 	float sinHRA = sin(halfRotAngle);
 
 	Quaternion currentRot(Radian(cos(halfRotAngle)), rotationAxis * sinHRA);
+	currentRot.normalise();
+	currentRot = *output * currentRot;
 
 	avAcc = (avAcc
 			+ Vector3(convert(_values[6], _values[7]) / 256.0,
 					convert(_values[8], _values[9]) / 256.0,
-					convert(_values[10], _values[11]) / 256.0)) / 2.0;
+					convert(_values[10], _values[11]) / -256.0)) / 2.0;
 
-	currentRot.normalise();
-	currentRot = *output * currentRot;
-	//printf("X: %.3f\t%.3f\t%.3f\n", avAcc.x, avAcc.y, avAcc.z);
-	//printf("X: %.3f\t%.3f\t%.3f\n", currentRot.yAxis().x, currentRot.yAxis().y, currentRot.yAxis().z);
-	if (driftCounter == 10 && false) {
+	if (driftCounter == 2) {
 		driftCounter = 0;
-		Vector3 tiltAxis(-avAcc.z, 0, avAcc.x);
+		compensationCounter = 0;
+		tiltAxis = Vector3(-avAcc.z, 0, avAcc.x);
 
-		tiltAxis.normalise();
-		//printf("tiltAxis: %.3f\t%.3f\t%.3f\n", tiltAxis.x,tiltAxis.y,tiltAxis.z);
-
-		Radian driftAngle = avAcc.angleBetween(output->yAxis());
-
-		//Radian driftAngle = Vector3(0.0,1.0,0.0).angleBetween(Vector3(0.0,1.0,0.01));
-		printf("driftAngle: %.3f\n", driftAngle.valueDegrees());
-
-		//Quaternion driftRotation(driftAngle, tiltAxis);
-
-		//driftRotation.normalise();
-		if (avAcc.angleBetween(output->yAxis()).valueDegrees() > 1)
-			currentRot = currentRot.yAxis().getRotationTo(avAcc, tiltAxis)
-					* currentRot;
 	} else if (gyro.length() < 0.3 && avAcc.length() < 1.1) {
 		driftCounter++;
+		compensationCounter = 0;
+	} else if (gyro.length() > 0.5) {
+		driftCounter = 0;
+		compensationCounter += timeDelta/10;
+		printf("%.5f\n", timeDelta);
+		if (compensationCounter < 1) {
+			printf("correct\n");
+			Quaternion driftCompensation = currentRot.yAxis().getRotationTo(
+					avAcc, tiltAxis);
+
+			Quaternion delta = Quaternion::Slerp(compensationCounter,
+					currentRot, driftCompensation, false);
+
+			currentRot = delta;
+		}
 	} else {
 		driftCounter = 0;
 	}

@@ -16,8 +16,10 @@ class MotionTracker {
     private:
         Quaternion* output;
         Vector3 avAcc;
+        Vector3 tiltAxis;
         serial_port* serial;
         int driftCounter;
+        Real compensationCounter;
         MotionTracker(Quaternion* _output);
         ~MotionTracker();
 
