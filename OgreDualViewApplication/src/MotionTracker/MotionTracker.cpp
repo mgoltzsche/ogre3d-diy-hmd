@@ -20,7 +20,8 @@ void MotionTracker::create(Quaternion *_output) {
 	thread.detach();
 }
 
-MotionTracker::MotionTracker(Quaternion *_output) {
+MotionTracker::MotionTracker(Quaternion *_output) :
+		driftCounter(0), avAcc(Vector3(0.0)) {
 	output = _output;
 
 	serial_port_base::baud_rate BAUD(38400);
@@ -62,25 +63,49 @@ void MotionTracker::assignValues(char *_values) {
 		scaleRate = 8.75 / 1000;
 	}
 
-	double pitch = toRadian(
-			convert(_values[0], _values[1]) * scaleRate);
-	double yaw = toRadian(
-			convert(_values[2], _values[3]) * scaleRate);
-	double roll = toRadian(
-			convert(_values[4], _values[5]) * scaleRate);
-	double accX = convert(_values[6], _values[7]);
-	double accY = convert(_values[8], _values[9]);
-	double accZ = convert(_values[10], _values[11]);
 	double magX = convert(_values[12], _values[13]);
 	double magY = convert(_values[14], _values[15]);
-
 	double magZ = convert(_values[16], _values[17]);
 
-	Vector3 axes(pitch, yaw, roll);
-	Quaternion currentRot(Radian(axes.length() * timeDelta), axes);
+	Vector3 gyro(toRadian(convert(_values[0], _values[1]) * scaleRate),
+			toRadian(convert(_values[2], _values[3]) * scaleRate),
+			toRadian(convert(_values[4], _values[5]) * scaleRate));
+
+	avAcc = (avAcc
+			+ Vector3(convert(_values[6], _values[7]) / 256.0,
+					convert(_values[8], _values[9]) / 256.0,
+					convert(_values[10], _values[11]) / 256.0)) / 2.0;
+
+	Quaternion currentRot(Radian(gyro.length() * timeDelta), gyro);
 
 	currentRot.normalise();
 	currentRot = *output * currentRot;
+	//printf("X: %.3f\t%.3f\t%.3f\n", avAcc.x, avAcc.y, avAcc.z);
+	//printf("X: %.3f\t%.3f\t%.3f\n", currentRot.yAxis().x, currentRot.yAxis().y, currentRot.yAxis().z);
+	if (driftCounter == 10) {
+		driftCounter = 0;
+		Vector3 tiltAxis(-avAcc.z, 0, avAcc.x);
+
+		tiltAxis.normalise();
+		//printf("tiltAxis: %.3f\t%.3f\t%.3f\n", tiltAxis.x,tiltAxis.y,tiltAxis.z);
+
+		Radian driftAngle = avAcc.angleBetween(output->yAxis());
+
+		//Radian driftAngle = Vector3(0.0,1.0,0.0).angleBetween(Vector3(0.0,1.0,0.01));
+		printf("driftAngle: %.3f\n", driftAngle.valueDegrees());
+
+		//Quaternion driftRotation(driftAngle, tiltAxis);
+
+		//driftRotation.normalise();
+		if (avAcc.angleBetween(output->yAxis()).valueDegrees() > 1)
+			currentRot = currentRot.yAxis().getRotationTo(avAcc, tiltAxis)
+					* currentRot;
+	} else if (gyro.length() < 0.3 && avAcc.length() < 1.1) {
+		driftCounter++;
+	} else {
+		driftCounter = 0;
+	}
+
 	output->swap(currentRot);
 }
 
@@ -94,4 +119,3 @@ short MotionTracker::convert(unsigned char lsb, unsigned char msb) {
 double MotionTracker::toRadian(double _degree) {
 	return _degree * (M_PI / 180);
 }
-

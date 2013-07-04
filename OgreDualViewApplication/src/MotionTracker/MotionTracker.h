@@ -15,13 +15,14 @@ class MotionTracker {
 
     private:
         Quaternion* output;
+        Vector3 avAcc;
         serial_port* serial;
+        int driftCounter;
         MotionTracker(Quaternion* _output);
         ~MotionTracker();
 
         short convert(unsigned char lsb, unsigned char msb);
         void assignValues(char *_values);
-
         double toRadian(double degree);
 };
 
