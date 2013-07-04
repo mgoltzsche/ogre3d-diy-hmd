@@ -67,22 +67,38 @@ void MotionTracker::assignValues(char *_values) {
 	double magY = convert(_values[14], _values[15]);
 	double magZ = convert(_values[16], _values[17]);
 
+	/*
+	 * The Oculus Way ...
+	 *
+	 * Vector3f rotAxis = angVel / angVelLength;
+	 * float halfRotAngle = angVelLength * deltaT * 0.5f;
+	 * float sinHRA = sin(halfRotAngle);
+	 * Quatf deltaQ(rotAxis.x*sinHRA, rotAxis.y*sinHRA, rotAxis.z*sinHRA, cos(halfRotAngle));
+	 * Q = Q * deltaQ;
+	 *
+	 */
 	Vector3 gyro(toRadian(convert(_values[0], _values[1]) * scaleRate),
 			toRadian(convert(_values[2], _values[3]) * scaleRate),
 			toRadian(convert(_values[4], _values[5]) * scaleRate));
+
+	Vector3 rotationAxis(gyro);
+	rotationAxis.normalise();
+
+	float halfRotAngle = gyro.length() * timeDelta * 0.5f;
+	float sinHRA = sin(halfRotAngle);
+
+	Quaternion currentRot(Radian(cos(halfRotAngle)), rotationAxis * sinHRA);
 
 	avAcc = (avAcc
 			+ Vector3(convert(_values[6], _values[7]) / 256.0,
 					convert(_values[8], _values[9]) / 256.0,
 					convert(_values[10], _values[11]) / 256.0)) / 2.0;
 
-	Quaternion currentRot(Radian(gyro.length() * timeDelta), gyro);
-
 	currentRot.normalise();
 	currentRot = *output * currentRot;
 	//printf("X: %.3f\t%.3f\t%.3f\n", avAcc.x, avAcc.y, avAcc.z);
 	//printf("X: %.3f\t%.3f\t%.3f\n", currentRot.yAxis().x, currentRot.yAxis().y, currentRot.yAxis().z);
-	if (driftCounter == 10) {
+	if (driftCounter == 10 && false) {
 		driftCounter = 0;
 		Vector3 tiltAxis(-avAcc.z, 0, avAcc.x);
 
