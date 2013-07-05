@@ -18,6 +18,7 @@
 
 using namespace Ogre;
 
+namespace HMD {
 //-------------------------------------------------------------------------------------
 BaseApplication::BaseApplication(void) :
 		mRoot(0), mCamera(0), mSceneMgr(0), mWindow(0), mResourcesCfg(
@@ -318,4 +319,5 @@ void BaseApplication::windowClosed(Ogre::RenderWindow* rw) {
 			mInputManager = 0;
 		}
 	}
+}
 }

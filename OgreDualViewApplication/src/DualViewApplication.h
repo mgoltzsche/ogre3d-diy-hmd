@@ -2,15 +2,11 @@
 #define __DualViewApplication_h_
 
 #include "BaseApplication.h"
+#include "HmdConfig.h"
 
 using namespace Ogre;
 
-struct HmdConfig {
-		float projectionCenterOffset;
-		float interpupillarDistance;
-		float eyeToScreenDistance;
-		Vector4 distortion;
-};
+namespace HMD {
 
 class DualViewApplication: public BaseApplication {
 public:
@@ -27,12 +23,12 @@ protected:
 	virtual bool frameRenderingQueued(const Ogre::FrameEvent& evt);
 
 	// OIS::KeyListener
-	virtual bool keyPressed( const OIS::KeyEvent &arg );
-	virtual bool keyReleased( const OIS::KeyEvent &arg );
+	virtual bool keyPressed(const OIS::KeyEvent &arg);
+	virtual bool keyReleased(const OIS::KeyEvent &arg);
 	// OIS::MouseListener
-	virtual bool mouseMoved( const OIS::MouseEvent &arg );
-	virtual bool mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
-	virtual bool mouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
+	virtual bool mouseMoved(const OIS::MouseEvent &arg);
+	virtual bool mousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id);
+	virtual bool mouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id);
 
 private:
 	SceneNode* mBodyNode;
@@ -44,14 +40,10 @@ private:
 	Viewport* mLeftViewport;
 	Viewport* mRightViewport;
 	HmdConfig mHmdCfg;
-	GpuProgramParametersSharedPtr mParamsLeft;
-	GpuProgramParametersSharedPtr mParamsRight;
-	MaterialPtr mMatLeft;
-	MaterialPtr mMatRight;
 	Camera* createCamera(const String &name, int factor);
 	void setupLight(void);
 	void setupHmdPostProcessing(void);
 	void applyCompositorParams(void);
 };
-
+}
 #endif // #ifndef __DualViewApplication_h_

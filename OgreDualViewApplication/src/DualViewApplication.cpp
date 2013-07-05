@@ -1,4 +1,5 @@
 #include "DualViewApplication.h"
+#include "OculusCompositorListener.h"
 #include "MotionTracker/MotionTracker.h"
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS || OGRE_PLATFORM == OGRE_PLATFORM_APPLE
@@ -12,6 +13,8 @@ using namespace Ogre;
 #define CAMERA_RIGHT "RightCamera"
 #define COMPOSITOR_LEFT "OculusLeft"
 #define COMPOSITOR_RIGHT "OculusRight"
+
+namespace HMD {
 
 DualViewApplication::DualViewApplication(void) :
 		mBodyNode(0), mCameraNode(0), mCameraRotation(), mMove(100), mRotate(0.1), mDirection(), mLeftViewport(0), mRightViewport(0), mHmdCfg() {
@@ -110,6 +113,8 @@ void DualViewApplication::setupHmdPostProcessing() {
 	CompositorInstance* leftComp = compositorMngr.addCompositor(mLeftViewport, COMPOSITOR_LEFT);
 	CompositorInstance* rightComp = compositorMngr.addCompositor(mRightViewport, COMPOSITOR_RIGHT);
 
+	leftComp->addListener(new OculusCompositorListener(&mHmdCfg, 1));
+	rightComp->addListener(new OculusCompositorListener(&mHmdCfg, -1));
 	leftComp->setEnabled(true);
 	rightComp->setEnabled(true);
 }
@@ -122,7 +127,7 @@ void DualViewApplication::setupLight() {
 
 	Light* spotLight = mSceneMgr->createLight("SpotLight");
 	spotLight->setType(Light::LT_SPOTLIGHT);
-	spotLight->setDiffuseColour(0.2, 0.2, 0.2);
+	spotLight->setDiffuseColour(0.1, 0.1, 0.1);
 	spotLight->setSpecularColour(1.0, 0, 0);
 	spotLight->setDirection(-1, -1, 0);
 	spotLight->setPosition(Vector3(300, 300, 0));
@@ -231,6 +236,30 @@ bool DualViewApplication::keyPressed(const OIS::KeyEvent &evt) {
 	case OIS::KC_Q:
 		mDirection.y = mMove;
 		break;
+	case OIS::KC_1:
+		mHmdCfg.distortion.x += 0.1;
+		break;
+	case OIS::KC_2:
+		mHmdCfg.distortion.x -= 0.1;
+		break;
+	case OIS::KC_3:
+		mHmdCfg.distortion.y += 0.1;
+		break;
+	case OIS::KC_4:
+		mHmdCfg.distortion.y -= 0.1;
+		break;
+	case OIS::KC_5:
+		mHmdCfg.distortion.z += 0.1;
+		break;
+	case OIS::KC_6:
+		mHmdCfg.distortion.z -= 0.1;
+		break;
+	case OIS::KC_7:
+		mHmdCfg.distortion.w += 0.1;
+		break;
+	case OIS::KC_8:
+		mHmdCfg.distortion.w -= 0.1;
+		break;
 	}
 
 	return true;
@@ -261,8 +290,6 @@ bool DualViewApplication::keyReleased(const OIS::KeyEvent &evt) {
 	case OIS::KC_PGUP:
 	case OIS::KC_Q:
 		mDirection.y = 0;
-		break;
-	default:
 		break;
 	}
 
@@ -336,3 +363,4 @@ int main(int argc, char *argv[])
 #ifdef __cplusplus
 }
 #endif
+}

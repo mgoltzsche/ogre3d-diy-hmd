@@ -43,6 +43,8 @@
 #   include <macUtils.h>
 #endif
 
+namespace HMD {
+
 #ifdef OGRE_IS_IOS
 class BaseApplication : public Ogre::FrameListener, public Ogre::WindowEventListener, OIS::KeyListener, OIS::MultiTouchListener, OgreBites::SdkTrayListener
 #else
@@ -109,5 +111,5 @@ protected:
 	OIS::Mouse* mMouse;
 	OIS::Keyboard* mKeyboard;
 };
-
+}
 #endif // #ifndef __BaseApplication_h_
