@@ -3,6 +3,7 @@
 
 #include "BaseApplication.h"
 #include "HmdConfig.h"
+#include "OculusCompositorListener.h"
 
 using namespace Ogre;
 
@@ -15,7 +16,6 @@ public:
 	virtual void go(void);
 
 protected:
-	//OgreBites::SdkTrayManager* mTrayMgr;
 	virtual void createScene(void);
 	virtual void createCameras(void);
 	virtual void createViewports(void);
@@ -40,10 +40,11 @@ private:
 	Viewport* mLeftViewport;
 	Viewport* mRightViewport;
 	HmdConfig mHmdCfg;
+	OculusCompositorListener* leftCompositorListener;
+	OculusCompositorListener* rightCompositorListener;
 	Camera* createCamera(const String &name, int factor);
 	void setupLight(void);
 	void setupHmdPostProcessing(void);
-	void applyCompositorParams(void);
 };
 }
 #endif // #ifndef __DualViewApplication_h_

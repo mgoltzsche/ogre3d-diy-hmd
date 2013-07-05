@@ -32,6 +32,8 @@ DualViewApplication::DualViewApplication(void) :
 }
 
 DualViewApplication::~DualViewApplication(void) {
+	delete leftCompositorListener;
+	delete rightCompositorListener;
 }
 
 void DualViewApplication::go(void) {
@@ -129,8 +131,11 @@ void DualViewApplication::setupHmdPostProcessing() {
 	CompositorInstance* leftComp = compositorMngr.addCompositor(mLeftViewport, COMPOSITOR_LEFT);
 	CompositorInstance* rightComp = compositorMngr.addCompositor(mRightViewport, COMPOSITOR_RIGHT);
 
-	leftComp->addListener(new OculusCompositorListener(&mHmdCfg, 1));
-	rightComp->addListener(new OculusCompositorListener(&mHmdCfg, -1));
+	leftCompositorListener = new OculusCompositorListener(&mHmdCfg, 1);
+	rightCompositorListener = new OculusCompositorListener(&mHmdCfg, -1);
+
+	leftComp->addListener(leftCompositorListener);
+	rightComp->addListener(rightCompositorListener);
 	leftComp->setEnabled(true);
 	rightComp->setEnabled(true);
 }
@@ -253,28 +258,28 @@ bool DualViewApplication::keyPressed(const OIS::KeyEvent &evt) {
 		mDirection.y = mMove;
 		break;
 	case OIS::KC_1:
-		mHmdCfg.distortion.x += 0.1;
+		mHmdCfg.distortion.x += 0.01;
 		break;
 	case OIS::KC_2:
-		mHmdCfg.distortion.x -= 0.1;
+		mHmdCfg.distortion.x -= 0.01;
 		break;
 	case OIS::KC_3:
-		mHmdCfg.distortion.y += 0.1;
+		mHmdCfg.distortion.y += 0.01;
 		break;
 	case OIS::KC_4:
-		mHmdCfg.distortion.y -= 0.1;
+		mHmdCfg.distortion.y -= 0.01;
 		break;
 	case OIS::KC_5:
-		mHmdCfg.distortion.z += 0.1;
+		mHmdCfg.distortion.z += 0.01;
 		break;
 	case OIS::KC_6:
-		mHmdCfg.distortion.z -= 0.1;
+		mHmdCfg.distortion.z -= 0.01;
 		break;
 	case OIS::KC_7:
-		mHmdCfg.distortion.w += 0.1;
+		mHmdCfg.distortion.w += 0.01;
 		break;
 	case OIS::KC_8:
-		mHmdCfg.distortion.w -= 0.1;
+		mHmdCfg.distortion.w -= 0.01;
 		break;
 	}
 
