@@ -94,7 +94,7 @@ void DualViewApplication::createScene() {
 	Plane plane(Vector3::UNIT_Y, 0);
 	MeshManager::getSingleton().createPlane("ground",
 			ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, plane,
-			3000, 3000, 20, 20, true, 1, 5, 5, Vector3::UNIT_Z);
+			7000, 7000, 50, 50, true, 1, 5, 5, Vector3::UNIT_Z);
 
 	Entity* ground = mSceneMgr->createEntity("Ground", "ground");
 	ground->setMaterialName("Examples/Rockwall");
