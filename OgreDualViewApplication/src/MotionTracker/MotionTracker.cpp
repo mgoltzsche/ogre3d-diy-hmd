@@ -102,24 +102,19 @@ void MotionTracker::assignValues(char *_values) {
 
 		compensationCounter = 0;
 
-		printf("set\n");
-
-		tiltAxis = Vector3(-avAcc.z, 0, avAcc.x);
-
 	} else if (gyro.length() < 0.3 && avAcc.length() < 1.1) {
 		driftCounter++;
-	} else {
+	} else if (gyro.length() > 0.5 && avAcc.length() < 1.3) {
 		driftCounter = 0;
-		compensationCounter += timeDelta/5;
+		compensationCounter += timeDelta;
 		if (compensationCounter < 1) {
-			printf("correct\n");
 			Quaternion driftCompensation = currentRot.yAxis().getRotationTo(
-					avAcc, tiltAxis);
+					avAcc, Vector3(-avAcc.z, 0, avAcc.x));
 
-			Quaternion delta = Quaternion::Slerp(compensationCounter,
-					currentRot, driftCompensation * currentRot, true);
+			//Quaternion delta = Quaternion::nlerp(compensationCounter,
+			//		currentRot, driftCompensation * currentRot, true);
 
-			currentRot = delta;
+			currentRot = driftCompensation * currentRot;
 		}
 	}
 
