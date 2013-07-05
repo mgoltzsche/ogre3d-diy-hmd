@@ -48,7 +48,7 @@ void DualViewApplication::go(void) {
 	mResourcesCfg = workingDir + mResourcesCfg;
 	mPluginsCfg = workingDir + mPluginsCfg;
 #endif
-	//MotionTracker::create(&mCameraRotation);
+	MotionTracker::create(&mCameraRotation);
 
 	if (!setup())
 		return;
