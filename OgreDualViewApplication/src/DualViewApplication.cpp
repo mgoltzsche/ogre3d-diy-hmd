@@ -25,6 +25,10 @@ DualViewApplication::DualViewApplication(void) :
 	mHmdCfg.distortion.y = 0.22f;
 	mHmdCfg.distortion.z = 0.24f;
 	mHmdCfg.distortion.w = 0;
+	mHmdCfg.scale.x = 0.3;
+	mHmdCfg.scale.y = 0.343;
+	mHmdCfg.scaleIn.x = 2;
+	mHmdCfg.scaleIn.y = 2;
 }
 
 DualViewApplication::~DualViewApplication(void) {
@@ -44,7 +48,7 @@ void DualViewApplication::go(void) {
 	mResourcesCfg = workingDir + mResourcesCfg;
 	mPluginsCfg = workingDir + mPluginsCfg;
 #endif
-	MotionTracker::create(&mCameraRotation);
+	//MotionTracker::create(&mCameraRotation);
 
 	if (!setup())
 		return;
@@ -108,6 +112,10 @@ void DualViewApplication::setupHmdPostProcessing() {
 	GpuProgramParametersSharedPtr pParamsLeft = matLeft->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
 	GpuProgramParametersSharedPtr pParamsRight = matRight->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
 
+	pParamsLeft->setNamedConstant("Scale", mHmdCfg.scale);
+	pParamsRight->setNamedConstant("Scale", mHmdCfg.scale);
+	pParamsLeft->setNamedConstant("ScaleIn", mHmdCfg.scaleIn);
+	pParamsRight->setNamedConstant("ScaleIn", mHmdCfg.scaleIn);
 	pParamsLeft->setNamedConstant("HmdWarpParam", mHmdCfg.distortion);
 	pParamsRight->setNamedConstant("HmdWarpParam", mHmdCfg.distortion);
 	pParamsLeft->setNamedConstant("LensCentre", 0.5f + mHmdCfg.projectionCenterOffset / 2.0f);

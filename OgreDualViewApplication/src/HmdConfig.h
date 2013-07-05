@@ -15,6 +15,8 @@ struct HmdConfig {
 		float interpupillaryDistance;
 		float eyeToScreenDistance;
 		Ogre::Vector4 distortion;
+		Ogre::Vector3 scale;
+		Ogre::Vector3 scaleIn;
 };
 
 #endif
