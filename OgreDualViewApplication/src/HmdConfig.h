@@ -12,7 +12,7 @@
 
 struct HmdConfig {
 		float projectionCenterOffset;
-		float interpupillarDistance;
+		float interpupillaryDistance;
 		float eyeToScreenDistance;
 		Ogre::Vector4 distortion;
 };

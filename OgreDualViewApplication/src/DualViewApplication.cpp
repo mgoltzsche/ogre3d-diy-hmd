@@ -19,7 +19,7 @@ namespace HMD {
 DualViewApplication::DualViewApplication(void) :
 		mBodyNode(0), mCameraNode(0), mCameraRotation(), mMove(100), mRotate(0.1), mDirection(), mLeftViewport(0), mRightViewport(0), mHmdCfg() {
 	mHmdCfg.projectionCenterOffset = 0.13f;
-	mHmdCfg.interpupillarDistance = 0.064f;
+	mHmdCfg.interpupillaryDistance = 0.064f;
 	mHmdCfg.eyeToScreenDistance = 0.068f;
 	mHmdCfg.distortion.x = 1.0f;
 	mHmdCfg.distortion.y = 0.22f;
@@ -44,7 +44,7 @@ void DualViewApplication::go(void) {
 	mResourcesCfg = workingDir + mResourcesCfg;
 	mPluginsCfg = workingDir + mPluginsCfg;
 #endif
-	//MotionTracker::create(&mCameraRotation);
+	MotionTracker::create(&mCameraRotation);
 
 	if (!setup())
 		return;
@@ -65,6 +65,7 @@ void DualViewApplication::createScene() {
 
 	SceneNode* rootNode = mSceneMgr->getRootSceneNode();
 
+	// add ogre heads
 	Entity* head1 = mSceneMgr->createEntity("Head1", "ogrehead.mesh");
 	SceneNode* head1Node = rootNode->createChildSceneNode("HeadNode1", Vector3(50, 50, 0));
 	head1Node->attachObject(head1);
@@ -75,18 +76,25 @@ void DualViewApplication::createScene() {
 	head2Node->scale(0.5f, 0.5f, 0.5f);
 	head2Node->yaw(Ogre::Degree(-45));
 
-	// create Ninja
-	Entity* ninja = mSceneMgr->createEntity("Ninja", "ninja.mesh");
-	SceneNode* ninjaNode = rootNode->createChildSceneNode("NinjaNode");
-	ninjaNode->attachObject(ninja);
-	ninjaNode->scale(0.3f, 0.3f, 0.3f);
-	ninjaNode->yaw(Degree(130));
+	// add houses
+	Vector3 housePositions[4] = {Vector3(1000, 500, 300), Vector3(-1000, 500, 500), Vector3(-300, 500, -900), Vector3(900, 500, -900)};
+
+	for (int i = 0; i < 4; i++) {
+		Entity* house = mSceneMgr->createEntity("tudorhouse.mesh");
+		house->setMaterialName("Examples/TudorHouse");
+		SceneNode* houseNode = rootNode->createChildSceneNode("HouseNode" + i, housePositions[i]);
+
+		if (i % 2 != 0)
+			houseNode->yaw(Degree(90), Node::TS_LOCAL);
+
+		houseNode->attachObject(house);
+	}
 
 	// create ground
 	Plane plane(Vector3::UNIT_Y, 0);
 	MeshManager::getSingleton().createPlane("ground",
 			ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, plane,
-			1500, 1500, 20, 20, true, 1, 5, 5, Vector3::UNIT_Z);
+			3000, 3000, 20, 20, true, 1, 5, 5, Vector3::UNIT_Z);
 
 	Entity* ground = mSceneMgr->createEntity("Ground", "ground");
 	ground->setMaterialName("Examples/Rockwall");
@@ -127,7 +135,7 @@ void DualViewApplication::setupLight() {
 
 	Light* spotLight = mSceneMgr->createLight("SpotLight");
 	spotLight->setType(Light::LT_SPOTLIGHT);
-	spotLight->setDiffuseColour(0.1, 0.1, 0.1);
+	spotLight->setDiffuseColour(0.3, 0.3, 0.3);
 	spotLight->setSpecularColour(1.0, 0, 0);
 	spotLight->setDirection(-1, -1, 0);
 	spotLight->setPosition(Vector3(300, 300, 0));
@@ -160,7 +168,7 @@ void DualViewApplication::createCameras() {
 Camera* DualViewApplication::createCamera(const String &name, int factor) {
 	Camera* camera = mSceneMgr->createCamera(name);
 
-	camera->setPosition(mHmdCfg.interpupillarDistance * 0.5 * factor, 0, 0);
+	camera->setPosition(mHmdCfg.interpupillaryDistance * 0.5 * factor, 0, 0);
 	camera->lookAt(Vector3(0, 0, -300));
 	camera->setNearClipDistance(mHmdCfg.eyeToScreenDistance);
 	camera->setFarClipDistance(10000);
