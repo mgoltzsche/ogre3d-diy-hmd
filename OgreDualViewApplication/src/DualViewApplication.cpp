@@ -1,4 +1,5 @@
 #include "DualViewApplication.h"
+#include "OculusCompositorListener.h"
 #include "MotionTracker/MotionTracker.h"
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS || OGRE_PLATFORM == OGRE_PLATFORM_APPLE
@@ -10,16 +11,20 @@ using namespace Ogre;
 
 #define CAMERA_LEFT "LeftCamera"
 #define CAMERA_RIGHT "RightCamera"
-#define HSCREEN_SIZE 0.14976f
-#define VSCREEN_SIZE 0.0935f
-#define EYE_TO_SCREEN_DISTANCE 0.068f
-#define IPD 0.064f
+#define COMPOSITOR_LEFT "OculusLeft"
+#define COMPOSITOR_RIGHT "OculusRight"
 
-const float projectionCenterOffset = 0.14;
-const float DEFAULT_DISTORTION[4] = {1.0f, 0.22f, 0.24f, 0};
+namespace HMD {
 
 DualViewApplication::DualViewApplication(void) :
-		mBodyNode(0), mCameraNode(0), mCameraRotation(), mMove(100), mRotate(0.1), mDirection(), leftViewport(0), rightViewport(0) {
+		mBodyNode(0), mCameraNode(0), mCameraRotation(), mMove(100), mRotate(0.1), mDirection(), mLeftViewport(0), mRightViewport(0), mHmdCfg() {
+	mHmdCfg.projectionCenterOffset = 0.13f;
+	mHmdCfg.interpupillaryDistance = 0.064f;
+	mHmdCfg.eyeToScreenDistance = 0.068f;
+	mHmdCfg.distortion.x = 1.0f;
+	mHmdCfg.distortion.y = 0.22f;
+	mHmdCfg.distortion.z = 0.24f;
+	mHmdCfg.distortion.w = 0;
 }
 
 DualViewApplication::~DualViewApplication(void) {
@@ -60,6 +65,7 @@ void DualViewApplication::createScene() {
 
 	SceneNode* rootNode = mSceneMgr->getRootSceneNode();
 
+	// add ogre heads
 	Entity* head1 = mSceneMgr->createEntity("Head1", "ogrehead.mesh");
 	SceneNode* head1Node = rootNode->createChildSceneNode("HeadNode1", Vector3(50, 50, 0));
 	head1Node->attachObject(head1);
@@ -70,23 +76,55 @@ void DualViewApplication::createScene() {
 	head2Node->scale(0.5f, 0.5f, 0.5f);
 	head2Node->yaw(Ogre::Degree(-45));
 
-	// create Ninja
-	Entity* ninja = mSceneMgr->createEntity("Ninja", "ninja.mesh");
-	SceneNode* ninjaNode = rootNode->createChildSceneNode("NinjaNode");
-	ninjaNode->attachObject(ninja);
-	ninjaNode->scale(0.3f, 0.3f, 0.3f);
-	ninjaNode->yaw(Degree(130));
+	// add houses
+	Vector3 housePositions[4] = {Vector3(1000, 500, 300), Vector3(-1000, 500, 500), Vector3(-300, 500, -900), Vector3(900, 500, -900)};
+
+	for (int i = 0; i < 4; i++) {
+		Entity* house = mSceneMgr->createEntity("tudorhouse.mesh");
+		house->setMaterialName("Examples/TudorHouse");
+		SceneNode* houseNode = rootNode->createChildSceneNode("HouseNode" + i, housePositions[i]);
+
+		if (i % 2 != 0)
+			houseNode->yaw(Degree(90), Node::TS_LOCAL);
+
+		houseNode->attachObject(house);
+	}
 
 	// create ground
 	Plane plane(Vector3::UNIT_Y, 0);
 	MeshManager::getSingleton().createPlane("ground",
 			ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, plane,
-			1500, 1500, 20, 20, true, 1, 5, 5, Vector3::UNIT_Z);
+			3000, 3000, 20, 20, true, 1, 5, 5, Vector3::UNIT_Z);
 
 	Entity* ground = mSceneMgr->createEntity("Ground", "ground");
 	ground->setMaterialName("Examples/Rockwall");
 	ground->setCastShadows(false);
 	rootNode->createChildSceneNode("GroundNode")->attachObject(ground);
+}
+
+void DualViewApplication::setupHmdPostProcessing() {
+	MaterialPtr matLeft = MaterialManager::getSingleton().getByName("Ogre/Compositor/Oculus");
+	MaterialPtr matRight = matLeft->clone("Ogre/Compositor/Oculus/Right");
+	GpuProgramParametersSharedPtr pParamsLeft = matLeft->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
+	GpuProgramParametersSharedPtr pParamsRight = matRight->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
+
+	pParamsLeft->setNamedConstant("HmdWarpParam", mHmdCfg.distortion);
+	pParamsRight->setNamedConstant("HmdWarpParam", mHmdCfg.distortion);
+	pParamsLeft->setNamedConstant("LensCentre", 0.5f + mHmdCfg.projectionCenterOffset / 2.0f);
+	pParamsRight->setNamedConstant("LensCentre", 0.5f - mHmdCfg.projectionCenterOffset / 2.0f);
+
+	CompositorManager &compositorMngr = CompositorManager::getSingleton();
+
+	CompositorPtr comp = compositorMngr.getByName("OculusRight");
+	comp->getTechnique(0)->getOutputTargetPass()->getPass(0)->setMaterialName("Ogre/Compositor/Oculus/Right");
+
+	CompositorInstance* leftComp = compositorMngr.addCompositor(mLeftViewport, COMPOSITOR_LEFT);
+	CompositorInstance* rightComp = compositorMngr.addCompositor(mRightViewport, COMPOSITOR_RIGHT);
+
+	leftComp->addListener(new OculusCompositorListener(&mHmdCfg, 1));
+	rightComp->addListener(new OculusCompositorListener(&mHmdCfg, -1));
+	leftComp->setEnabled(true);
+	rightComp->setEnabled(true);
 }
 
 void DualViewApplication::setupLight() {
@@ -97,7 +135,7 @@ void DualViewApplication::setupLight() {
 
 	Light* spotLight = mSceneMgr->createLight("SpotLight");
 	spotLight->setType(Light::LT_SPOTLIGHT);
-	spotLight->setDiffuseColour(0.2, 0.2, 0.2);
+	spotLight->setDiffuseColour(0.3, 0.3, 0.3);
 	spotLight->setSpecularColour(1.0, 0, 0);
 	spotLight->setDirection(-1, -1, 0);
 	spotLight->setPosition(Vector3(300, 300, 0));
@@ -116,33 +154,6 @@ void DualViewApplication::setupLight() {
 	mSceneMgr->setAmbientLight(ColourValue(0.1, 0.1, 0.1));
 }
 
-void DualViewApplication::setupHmdPostProcessing() {
-	MaterialPtr matLeft = MaterialManager::getSingleton().getByName("Ogre/Compositor/Oculus");
-	MaterialPtr matRight = matLeft->clone("Ogre/Compositor/Oculus/Right");
-	GpuProgramParametersSharedPtr pParamsLeft = matLeft->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
-	GpuProgramParametersSharedPtr pParamsRight = matRight->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
-	Vector4 hmdWarp = Vector4(
-			DEFAULT_DISTORTION[0],
-			DEFAULT_DISTORTION[1],
-			DEFAULT_DISTORTION[2],
-			DEFAULT_DISTORTION[3]
-	);
-
-	pParamsLeft->setNamedConstant("HmdWarpParam", hmdWarp);
-	pParamsRight->setNamedConstant("HmdWarpParam", hmdWarp);
-	pParamsLeft->setNamedConstant("LensCentre", 0.5f + projectionCenterOffset / 2.0f);
-	pParamsRight->setNamedConstant("LensCentre", 0.5f - projectionCenterOffset / 2.0f);
-
-	CompositorPtr comp = Ogre::CompositorManager::getSingleton().getByName("OculusRight");
-	comp->getTechnique(0)->getOutputTargetPass()->getPass(0)->setMaterialName("Ogre/Compositor/Oculus/Right");
-
-	CompositorInstance* leftComp = CompositorManager::getSingleton().addCompositor(leftViewport, "OculusLeft");
-	CompositorInstance* rightComp = CompositorManager::getSingleton().addCompositor(rightViewport, "OculusRight");
-
-	leftComp->setEnabled(true);
-	rightComp->setEnabled(true);
-}
-
 void DualViewApplication::createCameras() {
 	SceneNode* rootNode = mSceneMgr->getRootSceneNode();
 	mBodyNode = rootNode->createChildSceneNode("BodyNode", Vector3(0, 50, 200));
@@ -157,14 +168,14 @@ void DualViewApplication::createCameras() {
 Camera* DualViewApplication::createCamera(const String &name, int factor) {
 	Camera* camera = mSceneMgr->createCamera(name);
 
-	camera->setPosition(IPD * 0.5 * factor, 0, 0);
+	camera->setPosition(mHmdCfg.interpupillaryDistance * 0.5 * factor, 0, 0);
 	camera->lookAt(Vector3(0, 0, -300));
-	camera->setNearClipDistance(EYE_TO_SCREEN_DISTANCE);
+	camera->setNearClipDistance(mHmdCfg.eyeToScreenDistance);
 	camera->setFarClipDistance(10000);
 	camera->setFOVy(Radian(Degree(85)));
 
 	Matrix4 proj = Matrix4::IDENTITY;
-	proj.setTrans(Vector3(-projectionCenterOffset * factor, 0, 0));
+	proj.setTrans(Vector3(-mHmdCfg.projectionCenterOffset * factor, 0, 0));
 	camera->setCustomProjectionMatrix(true, proj * camera->getProjectionMatrix());
 
 	return camera;
@@ -172,62 +183,32 @@ Camera* DualViewApplication::createCamera(const String &name, int factor) {
 
 void DualViewApplication::createViewports() {
 	Camera *cam = mSceneMgr->getCamera(CAMERA_LEFT);
-	leftViewport = mWindow->addViewport(cam, 0, 0, 0, 0.5, 1);
-	leftViewport->setBackgroundColour(ColourValue(0, 0, 0));
+	mLeftViewport = mWindow->addViewport(cam, 0, 0, 0, 0.5, 1);
+	mLeftViewport->setBackgroundColour(ColourValue(0, 0, 0));
 	cam->setAspectRatio(
-			Real(leftViewport->getActualWidth())
-					/ Real(leftViewport->getActualHeight()));
+			Real(mLeftViewport->getActualWidth())
+					/ Real(mLeftViewport->getActualHeight()));
 
 	cam = mSceneMgr->getCamera(CAMERA_RIGHT);
-	rightViewport = mWindow->addViewport(cam, 1, 0.5, 0, 0.5, 1);
-	rightViewport->setBackgroundColour(ColourValue(0, 0, 0));
+	mRightViewport = mWindow->addViewport(cam, 1, 0.5, 0, 0.5, 1);
+	mRightViewport->setBackgroundColour(ColourValue(0, 0, 0));
 	cam->setAspectRatio(
-			Real(rightViewport->getActualWidth())
-					/ Real(rightViewport->getActualHeight()));
+			Real(mRightViewport->getActualWidth())
+					/ Real(mRightViewport->getActualHeight()));
 }
 
 void DualViewApplication::createFrameListener(void) {
-	Ogre::LogManager::getSingletonPtr()->logMessage("*** Initializing OIS ***");
-	OIS::ParamList pl;
-	size_t windowHnd = 0;
-	std::ostringstream windowHndStr;
-
-	mWindow->getCustomAttribute("WINDOW", &windowHnd);
-	windowHndStr << windowHnd;
-	pl.insert(std::make_pair(std::string("WINDOW"), windowHndStr.str()));
-
-	mInputManager = OIS::InputManager::createInputSystem(pl);
-
-	mKeyboard = static_cast<OIS::Keyboard*>(mInputManager->createInputObject(OIS::OISKeyboard, true));
-	mMouse = static_cast<OIS::Mouse*>(mInputManager->createInputObject(OIS::OISMouse, true));
-
-	mMouse->setEventCallback(this);
-	mKeyboard->setEventCallback(this);
+	BaseApplication::createFrameListener();
 
 	mDirection.x = mDirection.y = mDirection.z = 0;
-
-	//Set initial mouse clipping size
-	windowResized(mWindow);
-
 	mCameraRotation.x = mCameraRotation.y = mCameraRotation.z = 0;
 	mCameraRotation.w = 1;
-
-	//Register as a Window listener
-	Ogre::WindowEventUtilities::addWindowEventListener(mWindow, this);
-
-	mRoot->addFrameListener(this);
 }
 
 bool DualViewApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
-	if (mWindow->isClosed())
+	if (!BaseApplication::frameRenderingQueued(evt))
 		return false;
 
-	if (mShutDown)
-		return false;
-
-	mKeyboard->capture();
-	mMouse->capture();
-//printf("%.1f  %.1f  %.1f\n", mDirection.x, mDirection.y, mDirection.z);
 	mBodyNode->translate(mDirection * evt.timeSinceLastFrame, Ogre::Node::TS_LOCAL);
 	mCameraNode->setOrientation(mCameraRotation);
 
@@ -263,6 +244,30 @@ bool DualViewApplication::keyPressed(const OIS::KeyEvent &evt) {
 	case OIS::KC_Q:
 		mDirection.y = mMove;
 		break;
+	case OIS::KC_1:
+		mHmdCfg.distortion.x += 0.1;
+		break;
+	case OIS::KC_2:
+		mHmdCfg.distortion.x -= 0.1;
+		break;
+	case OIS::KC_3:
+		mHmdCfg.distortion.y += 0.1;
+		break;
+	case OIS::KC_4:
+		mHmdCfg.distortion.y -= 0.1;
+		break;
+	case OIS::KC_5:
+		mHmdCfg.distortion.z += 0.1;
+		break;
+	case OIS::KC_6:
+		mHmdCfg.distortion.z -= 0.1;
+		break;
+	case OIS::KC_7:
+		mHmdCfg.distortion.w += 0.1;
+		break;
+	case OIS::KC_8:
+		mHmdCfg.distortion.w -= 0.1;
+		break;
 	}
 
 	return true;
@@ -293,8 +298,6 @@ bool DualViewApplication::keyReleased(const OIS::KeyEvent &evt) {
 	case OIS::KC_PGUP:
 	case OIS::KC_Q:
 		mDirection.y = 0;
-		break;
-	default:
 		break;
 	}
 
@@ -368,3 +371,4 @@ int main(int argc, char *argv[])
 #ifdef __cplusplus
 }
 #endif
+}

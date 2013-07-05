@@ -111,14 +111,15 @@ set(HDRS
 	./src/AppDelegate.h
 	./src/BaseApplication.h
 	./src/DualViewApplication.h
-	./src/GyroInput.h
+	./src/OculusCompositorListener.h
+	./src/HmdConfig.h
 	./src/MotionTracker/MotionTracker.h
 )
  
 set(SRCS
 	./src/BaseApplication.cpp
 	./src/DualViewApplication.cpp
-	./src/GyroInput.cpp
+	./src/OculusCompositorListener.cpp
 	./src/MotionTracker/MotionTracker.cpp
 )
  

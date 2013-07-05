@@ -2,8 +2,11 @@
 #define __DualViewApplication_h_
 
 #include "BaseApplication.h"
+#include "HmdConfig.h"
 
 using namespace Ogre;
+
+namespace HMD {
 
 class DualViewApplication: public BaseApplication {
 public:
@@ -12,6 +15,7 @@ public:
 	virtual void go(void);
 
 protected:
+	//OgreBites::SdkTrayManager* mTrayMgr;
 	virtual void createScene(void);
 	virtual void createCameras(void);
 	virtual void createViewports(void);
@@ -19,12 +23,12 @@ protected:
 	virtual bool frameRenderingQueued(const Ogre::FrameEvent& evt);
 
 	// OIS::KeyListener
-	virtual bool keyPressed( const OIS::KeyEvent &arg );
-	virtual bool keyReleased( const OIS::KeyEvent &arg );
+	virtual bool keyPressed(const OIS::KeyEvent &arg);
+	virtual bool keyReleased(const OIS::KeyEvent &arg);
 	// OIS::MouseListener
-	virtual bool mouseMoved( const OIS::MouseEvent &arg );
-	virtual bool mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
-	virtual bool mouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
+	virtual bool mouseMoved(const OIS::MouseEvent &arg);
+	virtual bool mousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id);
+	virtual bool mouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id);
 
 private:
 	SceneNode* mBodyNode;
@@ -33,11 +37,13 @@ private:
 	Real mMove;
 	Vector3 mDirection;
 	Quaternion mCameraRotation;
-	Viewport* leftViewport;
-	Viewport* rightViewport;
+	Viewport* mLeftViewport;
+	Viewport* mRightViewport;
+	HmdConfig mHmdCfg;
 	Camera* createCamera(const String &name, int factor);
 	void setupLight(void);
 	void setupHmdPostProcessing(void);
+	void applyCompositorParams(void);
 };
-
+}
 #endif // #ifndef __DualViewApplication_h_
