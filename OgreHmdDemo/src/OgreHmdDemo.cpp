@@ -20,7 +20,7 @@ OgreHmdDemo::OgreHmdDemo() :
 		mHmdCfg(), mLeftViewport(0), mRightViewport(0),
 		mLeftCompositorListener(0), mRightCompositorListener(0) {
 	mHmdCfg.projectionCenterOffset = 0.13f;
-	mHmdCfg.interpupillaryDistance = 0.064f;
+	mHmdCfg.interPupillaryDistance = 0.064f;
 	mHmdCfg.eyeToScreenDistance = 0.068f;
 	mHmdCfg.distortion.x = 1.0f;
 	mHmdCfg.distortion.y = 0.22f;
@@ -28,8 +28,6 @@ OgreHmdDemo::OgreHmdDemo() :
 	mHmdCfg.distortion.w = 0;
 	mHmdCfg.scale.x = 0.3;
 	mHmdCfg.scale.y = 0.343;
-	mHmdCfg.scaleIn.x = 2;
-	mHmdCfg.scaleIn.y = 2;
 }
 
 OgreHmdDemo::~OgreHmdDemo() {
@@ -103,8 +101,6 @@ void OgreHmdDemo::setupHmdPostProcessing() {
 
 	pParamsLeft->setNamedConstant("Scale", mHmdCfg.scale);
 	pParamsRight->setNamedConstant("Scale", mHmdCfg.scale);
-	pParamsLeft->setNamedConstant("ScaleIn", mHmdCfg.scaleIn);
-	pParamsRight->setNamedConstant("ScaleIn", mHmdCfg.scaleIn);
 	pParamsLeft->setNamedConstant("HmdWarpParam", mHmdCfg.distortion);
 	pParamsRight->setNamedConstant("HmdWarpParam", mHmdCfg.distortion);
 	pParamsLeft->setNamedConstant("LensCentre", 0.5f + mHmdCfg.projectionCenterOffset / 2.0f);
@@ -162,7 +158,7 @@ void OgreHmdDemo::createCameras() {
 Camera* OgreHmdDemo::createCamera(const String &name, int factor) {
 	Camera* camera = mSceneMgr->createCamera(name);
 
-	camera->setPosition(mHmdCfg.interpupillaryDistance * 0.5 * factor, 0, 0);
+	camera->setPosition(mHmdCfg.interPupillaryDistance * 0.5 * factor, 0, 0);
 	camera->lookAt(Vector3(0, 0, -300));
 	camera->setNearClipDistance(mHmdCfg.eyeToScreenDistance);
 	camera->setFarClipDistance(10000);
